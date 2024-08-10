@@ -22,7 +22,7 @@
 
 ​![image](assets/image-20240811070509-adovzpp.png)​
 
-* 思源设置-关于找到API token，替换content.js中下图字段
+### 思源设置-关于找到API token，替换content.js中下图字段
 
 ​![image](assets/image-20240811070706-tvv2rxv.png)​
 
