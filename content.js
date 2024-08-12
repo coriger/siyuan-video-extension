@@ -104,6 +104,7 @@ $(function(){
                     sendResponse({time: document.querySelector('video').currentTime})
                     return true; // 保持消息通道打开直到sendResponse被调用
                 }else{
+                    document.querySelector('video').pause();
                     return false;
                 }
             }
@@ -115,6 +116,7 @@ $(function(){
                     sendResponse({time: document.querySelector('video').currentTime})
                     return true; // 保持消息通道打开直到sendResponse被调用
                 }else{
+                    document.querySelector('video').pause();
                     return false;
                 }
             }
@@ -165,17 +167,6 @@ $(function(){
                                 });
                             }
                         })
-            }
-
-            // bilibili  iframe查询进度条
-            if (request.action === "queryIframeVideo" && currentPageUrl.indexOf('player.bilibili.com/player.html') != -1) {
-                // 判断当前页面的iframe地址是否和request.frameUrl相同
-                if(document.URL == request.frameUrl){
-                    sendResponse({time: document.querySelector('video').currentTime})
-                    return true; // 保持消息通道打开直到sendResponse被调用
-                }else{
-                    return false;
-                }
             }
 
             // bilibili  iframe截图指令
