@@ -12,9 +12,9 @@ $(function(){
             injectVideoJumpButton()
         }else if(currentPageUrl.indexOf('player.bilibili.com/player.html') != -1){
             // bilibili iframe播放页
-            var video = document.getElementsByTagName('video')[0];
+            // var video = document.getElementsByTagName('video')[0];
             // video.currentTime = 60;
-            video.play();
+            // video.play();
         }else if(currentPageUrl.indexOf('youtube.com/embed') != -1){
             // youtube iframe播放页
             // document.getElementsByTagName("video")[0].click();
@@ -38,8 +38,6 @@ $(function(){
                     var time = target.innerText;
                     // 去除[]
                     time = time.replace(/\[|\]/g, '');
-                    // 跳转当前内嵌页面视频进度
-                    dumpInnerVideo(time)
                     // 这里可以同时固定住当前页面的视频
                     document.querySelectorAll(".fn__flex-1.protyle").forEach(function (node) {
                         // 获取class属性值
@@ -52,17 +50,14 @@ $(function(){
                                 menuNode.click();
                             }
 
-                            // var rowDiv = node.querySelector('div[data-sb-layout="row"]');
-                            // // 直接设置样式属性
-                            // rowDiv.style.maxHeight = "500px"; // 设置最大高度为100%
-                            // rowDiv.style.overflowY = "auto"; // 设置垂直方向的滚动条
-
                             // 每次点击时间戳 都要把当前页面iframe固定住
-                            node.querySelectorAll("iframe")[0].style.position = "fixed";
-                            node.querySelectorAll("iframe")[0].style.left = "150px";
-                            node.querySelectorAll("iframe")[0].style.top = "110px";
-                            node.querySelectorAll("iframe")[0].style.width = "37%";
-                            node.querySelectorAll("iframe")[0].style.zIndex = "100";
+                            node.querySelectorAll(".iframe-content")[0].style.position = "fixed";
+                            // 移除iframe的宽度width
+                            node.querySelectorAll("iframe")[0].style.removeProperty("width");
+
+                            var frameUrl = node.querySelectorAll("iframe")[0].getAttribute("src")
+                            // 跳转当前内嵌页面视频进度
+                            dumpInnerVideo(time, frameUrl);
                         }
                     })
                 }
@@ -76,19 +71,30 @@ $(function(){
         
             // youtube  iframe视频跳转
             if (request.action === "dumpFrameVideo" && currentPageUrl.indexOf('youtube.com/embed') != -1) {
-                document.querySelector('video').currentTime = request.time;
-                document.querySelector('video').play();
-                // 可以发送响应消息
-                sendResponse({result: "ok"});
-                return true; // 保持消息通道打开直到sendResponse被调用
+                if(document.URL == request.frameUrl){
+                    document.querySelector('video').currentTime = request.time;
+                    document.querySelector('video').play();
+                    // 可以发送响应消息
+                    sendResponse({result: "ok"});
+                    return true; // 保持消息通道打开直到sendResponse被调用
+                }else{
+                    document.querySelector('video').pause();
+                    return false;
+                }
             }
 
             // bilibili  iframe视频跳转
             if (request.action === "dumpFrameVideo" && currentPageUrl.indexOf('player.bilibili.com/player.html') != -1) {
-                document.querySelector('video').currentTime = request.time;
-                document.querySelector('video').play();
-                sendResponse({result: "ok"})
-                return true; // 保持消息通道打开直到sendResponse被调用
+                // 这里还需要判断一下iframe地址是否和request.frameUrl相同
+                if(document.URL == request.frameUrl){
+                    document.querySelector('video').currentTime = request.time;
+                    document.querySelector('video').play();
+                    sendResponse({result: "ok"})
+                    return true; // 保持消息通道打开直到sendResponse被调用
+                }else{
+                    document.querySelector('video').pause();
+                    return false;
+                }
             }
 
             // youtube  iframe查询进度条
@@ -208,7 +214,7 @@ function injectBilibiliVideoDownButton(){
                 var page = item.innerText.replace("P","").trim();
                 var duration = item.parentElement.nextElementSibling.innerText;
                 var videoTitle = item.nextElementSibling.innerText;
-                var videoUrl = `https://player.bilibili.com/player.html?bvid=${bvid}&page=${page}&high_quality=1&as_wide=1&allowfullscreen=true&autoplay=0&t=0`;
+                var videoUrl = `https://player.bilibili.com/player.html?bvid=${bvid}&page=${page}&high_quality=1&as_wide=1&allowfullscreen=true&autoplay=1`;
                 // 调用思源接口创建分片文件
                 var json = {
                     "notebook": "20240113225127-jsmsoov",
@@ -278,7 +284,7 @@ function injectBilibiliVideoDownButton(){
             var detailUrl = document.querySelector('meta[itemprop="url"]').getAttribute('content');
             var bvid = detailUrl.split("/")[4]
 
-            var videoUrl = `https://player.bilibili.com/player.html?bvid=${bvid}&page=1&high_quality=1&as_wide=1&allowfullscreen=true&autoplay=0&t=0`;
+            var videoUrl = `https://player.bilibili.com/player.html?bvid=${bvid}&page=1&high_quality=1&as_wide=1&allowfullscreen=true&autoplay=1`;
             // 替换占位符  作者、时间、时长
             markdown = markdown.replace(/{{VideoUrl}}/g,videoUrl)
             markdown = markdown.replace(/{{Author}}/g,author)
@@ -351,7 +357,7 @@ function injectBilibiliZhengPianButton(episodes){
                 var duration = parseVideoTimeFromDuration(item.duration);
                 var bvid = item.bvid;
                 // 获取视频地址
-                var videoUrl = `https://player.bilibili.com/player.html?bvid=${bvid}&page=1&high_quality=1&as_wide=1&allowfullscreen=true&autoplay=0`;
+                var videoUrl = `https://player.bilibili.com/player.html?bvid=${bvid}&page=1&high_quality=1&as_wide=1&allowfullscreen=true&autoplay=1`;
                 // 调用思源接口创建分片文件
                 json = {
                     "notebook": "20240113225127-jsmsoov",
@@ -482,7 +488,7 @@ function injectBilibiliHeJiButton(ugc_season){
                 item.episodes.forEach(async function (ep, index) {
                     var bvid = ep.bvid;
                     var videoTitle = ep.title;
-                    var videoUrl = `https://player.bilibili.com/player.html?bvid=${bvid}&page=1&high_quality=1&as_wide=1&allowfullscreen=true&autoplay=0`
+                    var videoUrl = `https://player.bilibili.com/player.html?bvid=${bvid}&page=1&high_quality=1&as_wide=1&allowfullscreen=true&autoplay=1`
                     var duration = parseVideoTimeFromDuration(ep.arc.duration*1000)
                     // 这里调用思源接口创建根目录
                     json = {
@@ -523,72 +529,45 @@ function injectBilibiliHeJiButton(ugc_season){
  * 时间戳按钮注入以及事件绑定
  */
 function injectVideoJumpButton(){
-            // 创建一个div容器（可选，如果只需要按钮则不需要）
-            const crxContainer = document.createElement('div');
-            crxContainer.id = 'CRX-container';
-            crxContainer.style.left = '1439px';
-            crxContainer.style.top = '181px';
-            crxContainer.style.transform = 'translateY(-50%)';
-            crxContainer.style.display = 'flex';
-            crxContainer.style.alignItems = 'center';
-            crxContainer.style.zIndex = '1000'; // 确保它位于其他元素之上
-            crxContainer.style.position = 'fixed';
-            // 创建并填充按钮
-            const cxbutton = document.createElement('button');
-            cxbutton.id = 'CRX-container-button';
-            cxbutton.type = 'button';
-            cxbutton.style.backgroundColor = 'red'; // 直接在元素上设置样式，而不是通过innerHTML
-            cxbutton.textContent = '时间戳'; // 设置按钮文本
-            // 将按钮添加到div容器中（如果需要的话）
-            crxContainer.appendChild(cxbutton);
-            // 将容器添加到页面的body开头
-            document.body.insertBefore(crxContainer, document.body.firstChild);
+            // 这里等待#toolbarVIP加载出来再继续执行
+            if (document.querySelector("#toolbarVIP") === null) {
+                setTimeout(injectVideoJumpButton, 100);
+                return;
+            }
 
-            var button = document.getElementById('CRX-container');
+            // 创建新元素
+            const insertDiv = document.createElement('div');
+            insertDiv.innerHTML = `<div data-menu="true" id="extension-video-insert" class="toolbar__item ariaLabel" aria-label="插入时间戳" data-position="right">🐞</div>`;
+
+            const resetDiv = document.createElement('div');
+            resetDiv.innerHTML = `<div data-menu="true" id="extension-video-reset" class="toolbar__item ariaLabel" aria-label="还原窗口" data-position="right">🪲</div>`;
+
+            // 获取#toolbarVIP元素
+            const toolbarVIP = document.getElementById('toolbarVIP');
+
+            // 将新元素添加到#toolbarVIP后面
+            toolbarVIP.insertAdjacentElement('afterend', insertDiv);
+            insertDiv.insertAdjacentElement('afterend', resetDiv);
+
+            var insertBtn = document.getElementById('extension-video-insert');
+            var resetBtn = document.getElementById('extension-video-reset');
     
-            // 定义拖动开始时的鼠标位置和按钮的初始位置
-            var startX, startY, startMouseX, startMouseY, initialButtonTop, initialButtonLeft;
-
             // 鼠标按下时保存初始位置
-            button.addEventListener('mousedown', function(event) {
-                console.log('mousedown')
-                if (event.buttons !== 1) return; // 确保是鼠标左键按下
-                
-                startX = button.offsetLeft;
-                startY = button.offsetTop;
-                initialButtonLeft = startX;
-                initialButtonTop = startY;
-
-                // 使按钮在拖动时可见
-                button.style.opacity = '0.5';
-            });
-
-            // 鼠标移动时更新按钮位置
-            document.addEventListener('mousemove', function(event) {
-                if (startX !== undefined && startY !== undefined) {
-                    // 设置按钮新的位置
-                    // var newLeft = event.clientX - startX;
-                    // var newTop = event.clientY - startY;
-            
-                    // 应用新位置
-                    button.style.left = event.clientX + 'px';
-                    button.style.top = event.clientY + 'px';
-                }
-            });
-
-            // 鼠标释放时结束拖动
-            document.addEventListener('mouseup', function() {
-                // 保存当前位置作为初始位置，以便下次拖动
-                initialButtonLeft = parseFloat(button.style.left || 0);
-                initialButtonTop = parseFloat(button.style.top || 0);
-                // 重置变量
-                startX = startY = undefined;
-                // 使按钮不可见性恢复正常
-                button.style.opacity = '1';
+            resetBtn.addEventListener('click', function() {
+                // 获取当前窗口的iframe的url
+                document.querySelectorAll(".fn__flex-1.protyle").forEach(function (node) {
+                    // 获取class属性值
+                    var className = node.getAttribute("class")
+                    if(className == 'fn__flex-1 protyle'){
+                        node.querySelectorAll(".iframe-content")[0].style.position = "relative";
+                        // 滚动条移动到最上面
+                        node.querySelector(".protyle-content.protyle-content--transition").scrollTop = 0;
+                    }
+                });
             });
 
             // 时间戳按钮点击事件
-            button.addEventListener('click', function() {
+            insertBtn.addEventListener('click', function() {
                 // 这里添加您的爬虫处理代码
                 console.log('按钮被点击了！');
 
@@ -604,17 +583,11 @@ function injectVideoJumpButton(){
                             menuNode.click();
                         }
 
-                        // 选择具有特定数据属性的div元素
-                        // var rowDiv = node.querySelector('div[data-sb-layout="row"]');
-                        // // 直接设置样式属性
-                        // rowDiv.style.maxHeight = "500px"; // 设置最大高度为100%
-                        // rowDiv.style.overflowY = "auto"; // 设置垂直方向的滚动条
                         // 每次点击时间戳 都要把当前页面iframe固定住
-                        node.querySelectorAll("iframe")[0].style.position = "fixed";
-                        node.querySelectorAll("iframe")[0].style.left = "150px";
-                        node.querySelectorAll("iframe")[0].style.top = "110px";
-                        node.querySelectorAll("iframe")[0].style.width = "37%";
-                        node.querySelectorAll("iframe")[0].style.zIndex = "100";
+                        // .iframe-content样式中 position:relative;
+                        node.querySelectorAll(".iframe-content")[0].style.position = "fixed";
+                        // iframe-content的width要和.protyle-wysiwyg.iframe中的width保持一致
+                        node.querySelectorAll("iframe")[0].style.removeProperty("width");
 
                         var frameUrl = node.querySelectorAll("iframe")[0].getAttribute("src")
                         // 发送消息到background.js获取iframe视频时间
@@ -638,7 +611,7 @@ function injectVideoJumpButton(){
                                         "parentID": nodeId
                                     });
                                     result = await invokeSiyuanApi("http://127.0.0.1:6806/api/block/appendBlock",{
-                                        "data": "",
+                                        "data": `>`,
                                         "dataType": "markdown",
                                         "parentID": nodeId
                                     });
@@ -664,9 +637,9 @@ function injectVideoJumpButton(){
  * @param time 时间戳
  * @returns 无返回值，通过回调函数输出响应结果
  */
-function dumpInnerVideo(time){
+function dumpInnerVideo(time,frameUrl){
     // 消息先发送到background.js 再由background.js 发送到各个content.js  找到匹配的iframe进行跳转
-    chrome.runtime.sendMessage({action: "dumpInnerVideo",time:time}, function(response) {
+    chrome.runtime.sendMessage({action: "dumpInnerVideo",time:time,frameUrl:frameUrl}, function(response) {
     });
 }
 

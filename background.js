@@ -17,9 +17,20 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
         chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
             // 遍历tabs
             // 发送消息到iframe中的content脚本
-            chrome.tabs.sendMessage(tabs[0].id, {action: "dumpFrameVideo",time:timeInSeconds});
+            chrome.tabs.sendMessage(tabs[0].id, {action: "dumpFrameVideo",time:timeInSeconds,frameUrl:request.frameUrl});
         });
         return true; // 保持消息通道打开以响应异步请求
+    }
+
+
+    if (request.action === 'popWindow') {
+        chrome.windows.create({
+            url: request.url,
+            type: 'popup',
+            width: 900,
+            height: 800
+        }, function(window) {
+        });
     }
 });
 
