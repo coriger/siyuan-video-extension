@@ -635,7 +635,7 @@ function injectBaiduPanButton(data){
                 json = {
                     "notebook": notebook,
                     "path": "/"+title+"/"+videoTitle,
-                    "markdown":`>视频：<span data-type="a" data-href="###">${videoUrl}</span>`
+                    "markdown":`<span data-type="a" data-href="###">${videoUrl}</span>`
                 }
                 // 调用思源创建文档api
                 await invokeSiyuanApi("http://127.0.0.1:6806/api/filetree/createDocWithMd",json)
