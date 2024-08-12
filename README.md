@@ -1,4 +1,4 @@
-# B站/百度网盘 视频笔记插件
+# 思源视频笔记插件:B站/百度网盘
 
 ## 1、下载[插件](https://github.com/coriger/siyuan-video-extension/archive/refs/heads/master.zip)
 
