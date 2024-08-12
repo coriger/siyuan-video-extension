@@ -65,7 +65,7 @@ $(function(){
         }, true); // 使用捕获模式来确保在所有其他事件监听器之前执行
 
         // 跨域通信  监听来自background的消息
-        chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
+        chrome.runtime.onMessage.addListener(async function(request, sender, sendResponse) {
             console.log("onMessage request action is " + request.action);
             console.log("onMessage current page is " + currentPageUrl);
         
@@ -114,6 +114,122 @@ $(function(){
                 if(document.URL == request.frameUrl){
                     sendResponse({time: document.querySelector('video').currentTime})
                     return true; // 保持消息通道打开直到sendResponse被调用
+                }else{
+                    return false;
+                }
+            }
+
+            // bilibili  写入截图
+            if (request.action === "screenInsert" && currentPageUrl.indexOf('/stage/build/desktop') != -1) {
+                        // 拿到数据直接写入思源
+                        var currentTime = request.currentTime;
+                        var imgUrl = request.imgUrl;
+                        // 把截图和时间戳插入到思源中
+                        
+                        console.log(currentTime);
+                        console.log(imgUrl);
+                        const videoTimestamp = document.createElement('div');
+                        videoTimestamp.innerHTML = `<span data-type="a" data-href="##">[${currentTime}]</span>`
+                        
+                        // 获取当前窗口下的datanode
+                        document.querySelectorAll(".fn__flex-1.protyle").forEach(async function (node) {
+                            // 获取class属性值
+                            var className = node.getAttribute("class")
+                            if(className == 'fn__flex-1 protyle'){
+                                // 从当前节点里找.sb
+                                var nodeId = node.querySelectorAll(".sb")[1].getAttribute("data-node-id");
+                                // 这里调用一下思源插入内容快的接口
+                                var result = await invokeSiyuanApi("http://127.0.0.1:6806/api/block/appendBlock",{
+                                    "data": videoTimestamp.innerHTML,
+                                    "dataType": "markdown",
+                                    "parentID": nodeId
+                                });
+                                result = await invokeSiyuanApi("http://127.0.0.1:6806/api/block/appendBlock",{
+                                    "data": `>`,
+                                    "dataType": "markdown",
+                                    "parentID": nodeId
+                                });
+                                // 这里移动焦点到最新插入的节点
+                                console.log("result is => "+result.data[0].doOperations[0].id)
+                                var newNode = document.querySelector(`[data-node-id="${result.data[0].doOperations[0].id}"]`)
+                                if (newNode) {
+                                    node.querySelector(".protyle-content.protyle-content--transition").scrollTop += 1000;
+                                    newNode.setAttribute('tabindex', '0');
+                                    newNode.focus();
+                                }
+                                // 插入图片  
+                                result = await invokeSiyuanApi("http://127.0.0.1:6806/api/block/appendBlock",{
+                                    "data": `​![image](${imgUrl})`,
+                                    "dataType": "markdown",
+                                    "parentID": nodeId
+                                });
+                            }
+                        })
+            }
+
+            // bilibili  iframe查询进度条
+            if (request.action === "queryIframeVideo" && currentPageUrl.indexOf('player.bilibili.com/player.html') != -1) {
+                // 判断当前页面的iframe地址是否和request.frameUrl相同
+                if(document.URL == request.frameUrl){
+                    sendResponse({time: document.querySelector('video').currentTime})
+                    return true; // 保持消息通道打开直到sendResponse被调用
+                }else{
+                    return false;
+                }
+            }
+
+            // bilibili  iframe截图指令
+            if (request.action === "screenIframe" && currentPageUrl.indexOf('player.bilibili.com/player.html') != -1) {
+                // 判断当前页面的iframe地址是否和request.frameUrl相同
+                if(document.URL == request.frameUrl){
+                    // 截图
+                    var video = document.querySelector('video');
+                    var canvas = document.createElement('canvas');
+                    var ctx = canvas.getContext('2d');
+                    canvas.width = video.videoWidth;
+                    canvas.height = video.videoHeight;
+                    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                    var base64Data = canvas.toDataURL('image/png');
+                    
+                    // 创建一个Blob对象
+                    const arr = base64Data.split(',');
+                    const mime = arr[0].match(/:(.*?);/)[1];
+                    const bstr = atob(arr[1]);
+                    let n = bstr.length;
+                    const u8arr = new Uint8Array(n);
+                    while(n--){
+                        u8arr[n] = bstr.charCodeAt(n);
+                    }
+                    const blob = new Blob([u8arr], {type:mime});
+
+                    blob.name = 'screenshot.png';
+                    blob.lastModifiedDate = new Date();
+
+                    // 创建FormData对象并添加文件
+                    const formData = new FormData();
+                    formData.append('assetsDirPath', '/assets/');
+                    // 添加文件，这里我们给文件命名为'screenshot.png'
+                    formData.append('file[]', blob, 'screenshot.png');
+
+                    // 这里直接调用思源上传接口
+                    var uploadResult = await invokeSiyuanUploadApi(formData);
+                    // 获取上传后的图片路径  screenshot.png这个是一个整体
+                    // {"code":0,"msg":"","data":{"errFiles":null,"succMap":{"screenshot.png":"assets/screenshot-20240812122103-liwlec4.png"}}}
+                    var imgUrl = uploadResult.data.succMap['screenshot.png'];
+                    if(imgUrl){
+                        var currentTime = parseVideoTimeFromDuration(document.querySelector('video').currentTime*1000);
+                        // 这里通过backgroud.js把截图和时间戳转发到content.js
+                        chrome.runtime.sendMessage({
+                            action: "screenInsert",
+                            imgUrl: imgUrl,
+                            currentTime: currentTime
+                        }, function(response) {
+                            console.log("content.js receive response => "+JSON.stringify(response));
+                        });
+                    }else{
+                        console.error("截图失败");
+                    }
+                    return false; // 保持消息通道打开直到sendResponse被调用
                 }else{
                     return false;
                 }
@@ -542,17 +658,22 @@ function injectVideoJumpButton(){
             const resetDiv = document.createElement('div');
             resetDiv.innerHTML = `<div data-menu="true" id="extension-video-reset" class="toolbar__item ariaLabel" aria-label="还原窗口" data-position="right">🪲</div>`;
 
+            const screenDiv = document.createElement('div');
+            screenDiv.innerHTML = `<div data-menu="true" id="extension-video-screen" class="toolbar__item ariaLabel" aria-label="截图" data-position="right">📷</div>`;
+
             // 获取#toolbarVIP元素
             const toolbarVIP = document.getElementById('toolbarVIP');
 
             // 将新元素添加到#toolbarVIP后面
             toolbarVIP.insertAdjacentElement('afterend', insertDiv);
             insertDiv.insertAdjacentElement('afterend', resetDiv);
+            resetDiv.insertAdjacentElement('afterend', screenDiv);
 
             var insertBtn = document.getElementById('extension-video-insert');
             var resetBtn = document.getElementById('extension-video-reset');
+            var screenBtn = document.getElementById('extension-video-screen');
     
-            // 鼠标按下时保存初始位置
+            // 重置视频窗口监听事件
             resetBtn.addEventListener('click', function() {
                 // 获取当前窗口的iframe的url
                 document.querySelectorAll(".fn__flex-1.protyle").forEach(function (node) {
@@ -565,6 +686,21 @@ function injectVideoJumpButton(){
                     }
                 });
             });
+
+            // 截图监听事件
+            screenBtn.addEventListener('click', function() {
+                // 获取当前窗口的iframe的url
+                document.querySelectorAll(".fn__flex-1.protyle").forEach(function (node) {
+                    // 获取class属性值
+                    var className = node.getAttribute("class")
+                    if(className == 'fn__flex-1 protyle'){
+                        // 先找到对应的iframe  通知backgroud.js转发截图请求
+                        var frameUrl = node.querySelectorAll("iframe")[0].getAttribute("src")
+                        chrome.runtime.sendMessage({action: "screenshot",frameUrl:frameUrl}, function(response) {
+                        });
+                    }
+                });
+            });            
 
             // 时间戳按钮点击事件
             insertBtn.addEventListener('click', function() {
@@ -669,6 +805,36 @@ async function invokeSiyuanApi(url,json){
         // 你可以继续处理响应，例如获取JSON数据
         const data = await response.json();
         console.log("invoke siyuan api success,result is "+JSON.stringify(data))
+        return data;
+    } catch (error) {
+        console.error('There has been a problem with your invokeSiyuanApi operation:', error);
+    }
+}
+
+
+/**
+ * 上传文件
+ * @param {*} url 
+ * @param {*} json 
+ * @returns 
+ */
+async function invokeSiyuanUploadApi(formData){
+
+    try {
+        const response = await fetch("http://127.0.0.1:6806/api/asset/upload", {
+            method: "POST",
+            headers: {
+                "Authorization": Authorization,
+            },
+            body: formData
+        });
+        // 确保响应状态码是2xx
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
+        }
+        // 你可以继续处理响应，例如获取JSON数据
+        const data = await response.json();
+        console.log("invoke siyuan upload api success,result is "+JSON.stringify(data))
         return data;
     } catch (error) {
         console.error('There has been a problem with your invokeSiyuanApi operation:', error);

@@ -22,6 +22,25 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
         return true; // 保持消息通道打开以响应异步请求
     }
 
+    // 截图指令
+    if (request.action === "screenshot") {
+        chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
+            // 遍历tabs
+            // 发送消息到iframe中的content脚本
+            chrome.tabs.sendMessage(tabs[0].id, {action: "screenIframe",frameUrl:request.frameUrl});
+        });
+        return true; // 保持消息通道打开以响应异步请求
+    }
+
+    // 写入截图指令
+    if (request.action === "screenInsert") {
+        chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
+            // 遍历tabs
+            // 发送消息到iframe中的content脚本
+            chrome.tabs.sendMessage(tabs[0].id, {action: "screenInsert",imgUrl: request.imgUrl,currentTime:request.currentTime});
+        });
+        return true; // 保持消息通道打开以响应异步请求
+    }
 
     if (request.action === 'popWindow') {
         chrome.windows.create({
