@@ -231,6 +231,7 @@ $(function(){
                     }
                     return false; // 保持消息通道打开直到sendResponse被调用
                 }else{
+                    document.querySelector('video').pause();
                     return false;
                 }
             }
@@ -694,6 +695,19 @@ function injectVideoJumpButton(){
                     // 获取class属性值
                     var className = node.getAttribute("class")
                     if(className == 'fn__flex-1 protyle'){
+                        // 判断当前文档树是否展开 如果展开 点击关闭
+                        // dock__item ariaLabel dock__item--active
+                        var menuNode = document.querySelector(".dock__item.ariaLabel.dock__item--active");
+                        if(menuNode){
+                            menuNode.click();
+                        }
+
+                        // 每次点击时间戳 都要把当前页面iframe固定住
+                        // .iframe-content样式中 position:relative;
+                        node.querySelectorAll(".iframe-content")[0].style.position = "fixed";
+                        // iframe-content的width要和.protyle-wysiwyg.iframe中的width保持一致
+                        node.querySelectorAll("iframe")[0].style.removeProperty("width");
+
                         // 先找到对应的iframe  通知backgroud.js转发截图请求
                         var frameUrl = node.querySelectorAll("iframe")[0].getAttribute("src")
                         chrome.runtime.sendMessage({action: "screenshot",frameUrl:frameUrl}, function(response) {
@@ -725,7 +739,7 @@ function injectVideoJumpButton(){
                         // iframe-content的width要和.protyle-wysiwyg.iframe中的width保持一致
                         node.querySelectorAll("iframe")[0].style.removeProperty("width");
 
-                        var frameUrl = node.querySelectorAll("iframe")[0].getAttribute("src")
+                        var frameUrl = node.querySelectorAll("iframe")[0].getAttribute("src");
                         // 发送消息到background.js获取iframe视频时间
                         chrome.runtime.sendMessage({action: "queryInnerIframe",frameUrl:frameUrl}, function(response) {
                             console.log('Received iframe video time :', response.currentTime);
