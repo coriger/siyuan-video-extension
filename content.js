@@ -161,7 +161,7 @@ $(function(){
                                 }
                                 // 插入图片  
                                 result = await invokeSiyuanApi("http://127.0.0.1:6806/api/block/appendBlock",{
-                                    "data": `​![image](${imgUrl})`,
+                                    "data": `>​![image](${imgUrl})`,
                                     "dataType": "markdown",
                                     "parentID": nodeId
                                 });
