@@ -82,9 +82,8 @@
 
 ​![image](assets/image-20240811074118-ea4ptcj.png)​
 
-### 视频文档，点击红色时间戳按钮插入时间，点击如果没有反应，可以强刷页面重试
-
-​![image](assets/image-20240811072406-9amgm0g.png)​
+### 视频文档，右上角三个按钮，依次是插入时间戳、视频位置重置、截图
+![image](https://github.com/user-attachments/assets/5bb73900-20eb-4cec-acfa-874606431846)
 
 ‍
 
