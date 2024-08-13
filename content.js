@@ -937,7 +937,12 @@ function injectVideoJumpButton(){
                         // dock__item ariaLabel dock__item--active
                         var menuNode = document.querySelector(".dock__item.ariaLabel.dock__item--active");
                         if(menuNode){
-                            menuNode.click();
+                            var dataTitle = menuNode.getAttribute("data-title");
+                            if(dataTitle && dataTitle == "大纲"){
+                                console.log("大纲模式,不处理");
+                            }else{
+                                menuNode.click();
+                            }
                         }
 
                         // 先判断iframe存不存在  存在调整样式
@@ -981,7 +986,12 @@ function injectVideoJumpButton(){
                         // dock__item ariaLabel dock__item--active
                         var menuNode = document.querySelector(".dock__item.ariaLabel.dock__item--active");
                         if(menuNode){
-                            menuNode.click();
+                            var dataTitle = menuNode.getAttribute("data-title");
+                            if(dataTitle && dataTitle == "大纲"){
+                                console.log("大纲模式,不处理");
+                            }else{
+                                menuNode.click();
+                            }
                         }
 
                         // 判断iframe存不存在  存在调整样式
