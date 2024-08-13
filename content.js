@@ -49,7 +49,13 @@ $(function(){
                             // dock__item ariaLabel dock__item--active
                             var menuNode = document.querySelector(".dock__item.ariaLabel.dock__item--active");
                             if(menuNode){
-                                menuNode.click();
+                                // 如果是大纲  就不执行关闭
+                                var dataTitle = menuNode.getAttribute("data-title");
+                                if(dataTitle && dataTitle == "大纲"){
+                                    console.log("大纲模式,不处理");
+                                }else{
+                                    menuNode.click();
+                                }
                             }
 
                             // 每次点击时间戳 都要把当前页面iframe固定住
@@ -176,7 +182,7 @@ $(function(){
                                     // 外部视频写入
                                     var videoUrl = node.querySelector("span[data-href='###']").innerText;
                                     if(videoUrl){
-                                        videoTimestamp.innerHTML = `<span data-type="a" data-href="###" data-title="${videoUrl}">[${currentTime}]</span>`;
+                                        videoTimestamp.innerHTML = `#### <span data-type="a" data-href="###" data-title="${videoUrl}">[${currentTime}]</span>：`;
                                         // 从当前节点里找.sb
                                         var nodeId = node.querySelector(".protyle-breadcrumb__item.protyle-breadcrumb__item--active").getAttribute("data-node-id");
                                         // 这里调用一下思源插入内容快的接口
@@ -230,7 +236,7 @@ $(function(){
                                 // 判断当前是哪种模式写入   iframe内嵌 还是外部视频
                                 var iframe = node.querySelector("iframe");
                                 if(iframe){
-                                    videoTimestamp.innerHTML = `<span data-type="a" data-href="##">[${currentTime}]</span>`
+                                    videoTimestamp.innerHTML = `#### <span data-type="a" data-href="##">[${currentTime}]</span>：`
                                     // iframe内嵌
                                     // 从当前节点里找.sb
                                     var nodeId = node.querySelectorAll(".sb")[1].getAttribute("data-node-id");
@@ -993,7 +999,7 @@ function injectVideoJumpButton(){
                                 console.log('Received iframe video time :', response.currentTime);
                                 // 往页面插入时间戳
                                 const videoTimestamp = document.createElement('div');
-                                videoTimestamp.innerHTML = `<span data-type="a" data-href="##">[${response.currentTime}]</span>`
+                                videoTimestamp.innerHTML = `#### <span data-type="a" data-href="##">[${response.currentTime}]</span>：`
                                 
                                 // 从当前节点里找.sb
                                 var nodeId = node.querySelectorAll(".sb")[1].getAttribute("data-node-id");
@@ -1029,7 +1035,7 @@ function injectVideoJumpButton(){
                                     console.log('Received iframe video time :', response.currentTime);
                                     // 往页面插入时间戳
                                     const videoTimestamp = document.createElement('div');
-                                    videoTimestamp.innerHTML = `<span data-type="a" data-href="###" data-title="${videoUrl}">[${response.currentTime}]</span>`
+                                    videoTimestamp.innerHTML = `#### <span data-type="a" data-href="###" data-title="${videoUrl}">[${response.currentTime}]</span>：`
                                     
                                     var nodeId = node.querySelector(".protyle-breadcrumb__item.protyle-breadcrumb__item--active").getAttribute("data-node-id");
                                     // 这里调用一下思源插入内容快的接口
