@@ -1,6 +1,6 @@
 # 思源笔记：视频笔记插件
 
-#### 1、[下载](https://github.com/coriger/siyuan-video-extension/archive/refs/heads/master.zip)
+#### 1、下载最新Releases版本
 
 #### 2、解压
 
