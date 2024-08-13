@@ -14,19 +14,19 @@
 
 ​![image](assets/image-20240811065659-910u9er.png)​
 
-- 到思源的数据目录中找到这个md文件，拿到它的完整路径,替换content.js中下pageTemplateUrl字段
+- 到思源的数据目录中找到这个md文件，拿到它的完整路径,替换common.js中下pageTemplateUrl字段
 
 ​![image](assets/image-20240811070032-qh29h3n.png)​
 
 ​![image](assets/image-20240811070509-adovzpp.png)​
 
-- 思源设置-关于找到API token，替换content.js中下Authorization字段
+- 思源设置-关于找到API token，替换common.js中下Authorization字段
 
 ​![image](assets/image-20240811070706-tvv2rxv.png)​
 
 ​![image](assets/image-20240811070631-y0q69yp.png)​
 
-- 打开网页端思源，只打开一个笔记本，打开f12，在元素菜单中搜索b3-list b3-list--background，边上data-url里的值替换content.js中的notebook字段
+- 打开网页端思源，只打开一个笔记本，打开f12，在元素菜单中搜索b3-list b3-list--background，边上data-url里的值替换common.js中的notebook字段
   ![image](assets/image_03.png)
 
 ## 3、使用Chrome进入扩展页面
@@ -61,7 +61,7 @@
 
 ![image](assets/image_01.png)
 
-## 6、点击下载按钮后，会先按照层级结构依次创建文档，然后根据模版样式进行渲染，需要一定时间，目前没有开发下载完成的页面通知，可以打开浏览器F12看控制台content.js，持续3s以上没有新的日志打印就说明下载结束了，下载途中不要去打开视频文档
+## 6、点击下载按钮后，会先按照层级结构依次创建文档，然后根据模版样式进行渲染，需要一定时间，目前没有开发下载完成的页面通知，可以打开浏览器F12看控制台日志，持续3s以上没有新的日志打印就说明下载结束了，下载途中不要去打开视频文档
 
 ​![image](assets/image-20240811072025-q0ep4ih.png)​
 

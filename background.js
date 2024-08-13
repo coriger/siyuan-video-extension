@@ -56,123 +56,54 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
 
     // 跳转外部视频指令
     if (request.action === "dumpOuterVideo") {
-        var timeInSeconds = parseTimeFromStr(request.time);
-        chrome.tabs.query({}, function(tabs) {
-            // 遍历tabs 
-            for (var i = 0; i < tabs.length; i++) {
-                // 判断url是否存在 
-                if (tabs[i].url == request.videoUrl){
-                    console.log("已存在tab："+request.videoUrl);
-                    // 假设你已经有了tabs数组，并且知道要切换到的标签页的索引i
-                    // 首先，使用chrome.windows.update将目标窗口置于最前面（如果它不在最前面的话）
-                    chrome.windows.update(tabs[i].windowId, {focused: true}, function() {
-                        // 然后，使用chrome.tabs.update将目标标签页设置为活动标签页
-                        chrome.tabs.update(tabs[i].id, {active: true}, function() {
-                            // 发送消息到content中  进行跳转操作
-                            chrome.tabs.sendMessage(tabs[i].id, {action: "dumpOuterVideo",time:timeInSeconds,"videoUrl":request.videoUrl});
-                        });
-                    });
-                    return;
-                }
-            }
-
-            // 先判断一下有没有tabId  
+            var timeInSeconds = parseTimeFromStr(request.time);
+            // 先判断一下有没有tabId
             if(tabId && tabId != ""){
                 // 有的话再判断下tabId对应的tab是否还存在
                 chrome.tabs.get(tabId,function(tab){
                     if(!tab){
-                        tabId = "";
                         // 不存在 则创建
-                        chrome.tabs.create({url: request.videoUrl}, function(tab) {
-                            tabId = tab.id;
-                            chrome.windows.update(tab.windowId, {focused: true}, function() {
-                                    // 然后，使用chrome.tabs.update将目标标签页设置为活动标签页
-                                    chrome.tabs.update(tab.id, {active: true}, function() {});
-                            });
-                        });
+                        createAndDump(request.videoUrl,timeInSeconds);
                     }else{
                         // tab还存在，则直接在该tab上打开新链接，并且切换为活动页
-                        chrome.tabs.update(tabId, {url: request.videoUrl}, function() {
-                            chrome.windows.update(tabId, {focused: true}, function() {
-                                // 然后，使用chrome.tabs.update将目标标签页设置为活动标签页
-                                chrome.tabs.update(tabId, {active: true}, function() {
-                                });
-                            });
-                        });
+                        if (tab.url == request.videoUrl){
+                            dump(tabId,request.videoUrl,timeInSeconds)
+                        }else{
+                            switchAndDump(tabId,request.videoUrl,timeInSeconds);
+                        }
                     }
                 })
             }else{
-                // 不存在 则创建
-                chrome.tabs.create({url: request.videoUrl}, function(tab) {
-                    tabId = tab.id;
-                    chrome.windows.update(tab.windowId, {focused: true}, function() {
-                            // 然后，使用chrome.tabs.update将目标标签页设置为活动标签页
-                            chrome.tabs.update(tab.id, {active: true}, function() {});
-                    });
-                });
+                // 不存在 则创建并跳转
+                createAndDump(request.videoUrl,timeInSeconds);
             }
-        });
-        return true; // 保持消息通道打开以响应异步请求
-    }    
+
+            return true; // 保持消息通道打开以响应异步请求
+    }
 
     // 定位视频详情页窗口
     if (request.action === "openOuterVideo") {
         console.log("openOuterVideo : " + request.videoUrl);
-        chrome.tabs.query({}, function(tabs) {
-            // 遍历tabs 
-            for (var i = 0; i < tabs.length; i++) {
-                // 判断url是否存在 
-                if (tabs[i].url == request.videoUrl){
-                    console.log("已存在tab");
-                    // 假设你已经有了tabs数组，并且知道要切换到的标签页的索引i
-                    // 首先，使用chrome.windows.update将目标窗口置于最前面（如果它不在最前面的话）
-                    chrome.windows.update(tabs[i].windowId, {focused: true}, function() {
-                        // 然后，使用chrome.tabs.update将目标标签页设置为活动标签页
-                        chrome.tabs.update(tabs[i].id, {active: true}, function() {
-                            // 如果需要，可以在这里添加成功切换到标签页后的处理逻辑
-                        });
-                    });
-                    return;
-                }
-            }
-
-
-            // 先判断一下有没有tabId  
-            if(tabId && tabId != ""){
-                // 有的话再判断下tabId对应的tab是否还存在
-                chrome.tabs.get(tabId,function(tab){
-                    if(!tab){
-                        tabId = "";
-                        // 不存在 则创建
-                        chrome.tabs.create({url: request.videoUrl}, function(tab) {
-                            tabId = tab.id;
-                            chrome.windows.update(tab.windowId, {focused: true}, function() {
-                                    // 然后，使用chrome.tabs.update将目标标签页设置为活动标签页
-                                    chrome.tabs.update(tab.id, {active: true}, function() {});
-                            });
-                        });
+        // 先判断一下有没有tabId  
+        if(tabId && tabId != ""){
+            // 有的话再判断下tabId对应的tab是否还存在
+            chrome.tabs.get(tabId,function(tab){
+                if(!tab){
+                    createTab(request.videoUrl);
+                }else{
+                    // tab还存在  判断url是否一致  一致的话 直接切到该tab上
+                    if (tab.url == request.videoUrl){
+                        active(tabId)
                     }else{
-                        // tab还存在，则直接在该tab上打开新链接，并且切换为活动页
-                        chrome.tabs.update(tabId, {url: request.videoUrl}, function() {
-                            chrome.windows.update(tabId, {focused: true}, function() {
-                                // 然后，使用chrome.tabs.update将目标标签页设置为活动标签页
-                                chrome.tabs.update(tabId, {active: true}, function() {
-                                });
-                            });
-                        });
+                        switchAndActive(tabId,request.videoUrl);
                     }
-                })
-            }else{
-                // 不存在 则创建
-                chrome.tabs.create({url: request.videoUrl}, function(tab) {
-                    tabId = tab.id;
-                    chrome.windows.update(tab.windowId, {focused: true}, function() {
-                            // 然后，使用chrome.tabs.update将目标标签页设置为活动标签页
-                            chrome.tabs.update(tab.id, {active: true}, function() {});
-                    });
-                });
-            }
-        });
+                }
+            })
+        }else{
+            // 不存在 则创建
+            createTab(request.videoUrl);
+        }
+
         return true; // 保持消息通道打开以响应异步请求
     }
 
@@ -236,7 +167,6 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
                             // 发送给所有content脚本的页面
                             for (var j = 0; j < tabs.length; j++) {
                                 chrome.tabs.sendMessage(tabs[j].id, {action: "screenOuterInsert",imgUrl: request.imgUrl,currentTime:request.currentTime});
-
                             }
                         });
                     });
@@ -249,6 +179,102 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
 
 });
 
+
+/**
+ * 创建一个Tab视频播放页 并跳转到指定为止
+ * @param {*} request 
+ * @param {*} videoUrl 
+ * @param {*} timeInSeconds 
+ */
+function createAndDump(videoUrl,timeInSeconds){
+    chrome.tabs.create({url: videoUrl}, function(tab) {
+        tabId = tab.id;
+        chrome.windows.update(tab.windowId, {focused: true}, function() {
+                // 然后，使用chrome.tabs.update将目标标签页设置为活动标签页
+                chrome.tabs.update(tab.id, {active: true}, function() {
+                    // 发送消息到content中  进行跳转操作
+                    chrome.tabs.sendMessage(tab.id, {action: "dumpOuterVideo",time:timeInSeconds,"videoUrl":videoUrl});
+                });
+        });
+    });
+}
+
+/**
+ * 视频页面跳转到指定位置
+ * @param {*} tabId 
+ * @param {*} timeInSeconds 
+ */
+function dump(tabId,videoUrl,timeInSeconds){
+    chrome.windows.update(tabId, {focused: true}, function() {
+        // 然后，使用chrome.tabs.update将目标标签页设置为活动标签页
+        chrome.tabs.update(tabId, {active: true}, function() {
+            // 发送消息到content中  进行跳转操作
+            chrome.tabs.sendMessage(tabId, {action: "dumpOuterVideo",time:timeInSeconds,"videoUrl":videoUrl});
+        });
+    });
+}
+
+/**
+ * 切换url 并跳转到指定位置
+ * @param {*} tabId 
+ * @param {*} request 
+ * @param {*} videoUrl 
+ * @param {*} timeInSeconds 
+ */
+function switchAndDump(tabId,videoUrl,timeInSeconds){
+    chrome.tabs.update(tabId, {url: videoUrl}, function() {
+        chrome.windows.update(tabId, {focused: true}, function() {
+            // 然后，使用chrome.tabs.update将目标标签页设置为活动标签页
+            chrome.tabs.update(tabId, {active: true}, function() {
+                // 发送消息到content中  进行跳转操作
+                chrome.tabs.sendMessage(tabId, {action: "dumpOuterVideo",time:timeInSeconds,"videoUrl":videoUrl});
+            });
+        });
+    });
+}
+
+/**
+ * 激活tab页
+ * @param {*} tabId 
+ */
+function active(tabId){
+    chrome.windows.update(tabId, {focused: true}, function() {
+        // 然后，使用chrome.tabs.update将目标标签页设置为活动标签页
+        chrome.tabs.update(tabId, {active: true}, function() {
+        });
+    });
+}
+
+
+/**
+ * 切换url并激活
+ * @param {*} tabId 
+ * @param {*} request 
+ * @param {*} videoUrl 
+ */
+function switchAndActive(tabId, videoUrl) {
+    // 不一致 则先跳转url，再切到该tab上
+    chrome.tabs.update(tabId, { url: videoUrl }, function () {
+        chrome.windows.update(tabId, { focused: true }, function () {
+            // 然后，使用chrome.tabs.update将目标标签页设置为活动标签页
+            chrome.tabs.update(tabId, { active: true }, function () {});
+        });
+    });
+}
+
+/**
+ * 创建一个Tab视频播放页
+ * @param {*} videoUrl 
+ */
+function createTab(videoUrl) {
+    chrome.tabs.create({ url: videoUrl }, function (tab) {
+            tabId = tab.id;
+            chrome.windows.update(tab.windowId, { focused: true }, function () {
+                // 然后，使用chrome.tabs.update将目标标签页设置为活动标签页
+                chrome.tabs.update(tab.id, { active: true }, function () {});
+            });
+    });
+}
 
 /**
  * 针对百度网盘接口的监听  
@@ -276,7 +302,7 @@ chrome.webRequest.onCompleted.addListener(function (details) {
             chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
                 // 遍历tabs
                 // 发送消息到iframe中的content脚本
-                chrome.tabs.sendMessage(tabs[0].id, {action: "injectBaiduPanButton",data:json});
+                chrome.tabs.sendMessage(tabs[0].id, {action: "injectDownloadButton",data:json});
             });
         })
         .catch(error => {

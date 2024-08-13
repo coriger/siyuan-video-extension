@@ -1,8 +1,3 @@
-var currentPageUrl;
-const pageTemplateUrl = "F:\\思源笔记\\data\\templates\\视频笔记模版.md"
-const Authorization = "token 4si8l21oy72gng6e"
-const notebook = "20240113225127-jsmsoov"
-
 $(function(){
         // 获取当前tab页面的url  根据不同域名进行不同的注入处理
         currentPageUrl = document.location.href;
@@ -11,22 +6,9 @@ $(function(){
         if(currentPageUrl.indexOf('/stage/build/desktop') != -1){
             // 思源页面  注入时间戳按钮
             injectVideoJumpButton()
-        }else if(currentPageUrl.indexOf('player.bilibili.com/player.html') != -1){
-            // bilibili iframe播放页
-            // var video = document.getElementsByTagName('video')[0];
-            // video.currentTime = 60;
-            // video.play();
-        }else if(currentPageUrl.indexOf('youtube.com/embed') != -1){
-            // youtube iframe播放页
-            // document.getElementsByTagName("video")[0].click();
-            // var video = document.getElementsByTagName('video')[0];
-            // video.currentTime = 60;
-            // video.play();
         }else if(currentPageUrl.indexOf('bilibili.com/video') != -1){
             // bilibili 列表 &&单视频   合集需要单独劫持
             injectBilibiliVideoDownButton()
-        }else if(currentPageUrl.indexOf('bilibili.com/bangumi/play') != -1){
-            // bilibili电视剧  走劫持逻辑
         }
         
         // 监听点击事件  这里主要是处理思源页面中的时间戳标签点击事件
@@ -126,20 +108,6 @@ $(function(){
                 }
             }
 
-            // bilibili  iframe视频跳转
-            if (request.action === "dumpFrameVideo" && currentPageUrl.indexOf('player.bilibili.com/player.html') != -1) {
-                // 这里还需要判断一下iframe地址是否和request.frameUrl相同
-                if(document.URL == request.frameUrl){
-                    document.querySelector('video').currentTime = request.time;
-                    document.querySelector('video').play();
-                    sendResponse({result: "ok"})
-                    return true; // 保持消息通道打开直到sendResponse被调用
-                }else{
-                    document.querySelector('video').pause();
-                    return false;
-                }
-            }
-
             // 查询外部视频进度条
             if (request.action === "queryOuterVideo") {
                 // 判断当前页面的iframe地址是否和request.frameUrl相同
@@ -147,19 +115,6 @@ $(function(){
                     sendResponse({time: document.querySelector('video').currentTime})
                     document.querySelector('video').play();
                     return true; // 保持消息通道打开直到sendResponse被调用
-                }
-            }
-
-            // bilibili  iframe查询进度条
-            if (request.action === "queryIframeVideo" && currentPageUrl.indexOf('player.bilibili.com/player.html') != -1) {
-                // 判断当前页面的iframe地址是否和request.frameUrl相同
-                if(document.URL == request.frameUrl){
-                    sendResponse({time: document.querySelector('video').currentTime})
-                    document.querySelector('video').play();
-                    return true; // 保持消息通道打开直到sendResponse被调用
-                }else{
-                    document.querySelector('video').pause();
-                    return false;
                 }
             }
 
@@ -272,64 +227,6 @@ $(function(){
                         return true; // 保持消息通道打开直到sendResponse被调用
             }
 
-            // bilibili  iframe截图指令
-            if (request.action === "screenIframe" && currentPageUrl.indexOf('player.bilibili.com/player.html') != -1) {
-                // 判断当前页面的iframe地址是否和request.frameUrl相同
-                if(document.URL == request.frameUrl){
-                    // 截图
-                    var video = document.querySelector('video');
-                    var canvas = document.createElement('canvas');
-                    var ctx = canvas.getContext('2d');
-                    canvas.width = video.videoWidth;
-                    canvas.height = video.videoHeight;
-                    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-                    var base64Data = canvas.toDataURL('image/png');
-                    
-                    // 创建一个Blob对象
-                    const arr = base64Data.split(',');
-                    const mime = arr[0].match(/:(.*?);/)[1];
-                    const bstr = atob(arr[1]);
-                    let n = bstr.length;
-                    const u8arr = new Uint8Array(n);
-                    while(n--){
-                        u8arr[n] = bstr.charCodeAt(n);
-                    }
-                    const blob = new Blob([u8arr], {type:mime});
-
-                    blob.name = 'screenshot.png';
-                    blob.lastModifiedDate = new Date();
-
-                    // 创建FormData对象并添加文件
-                    const formData = new FormData();
-                    formData.append('assetsDirPath', '/assets/');
-                    // 添加文件，这里我们给文件命名为'screenshot.png'
-                    formData.append('file[]', blob, 'screenshot.png');
-
-                    // 这里直接调用思源上传接口
-                    var uploadResult = await invokeSiyuanUploadApi(formData);
-                    // 获取上传后的图片路径  screenshot.png这个是一个整体
-                    // {"code":0,"msg":"","data":{"errFiles":null,"succMap":{"screenshot.png":"assets/screenshot-20240812122103-liwlec4.png"}}}
-                    var imgUrl = uploadResult.data.succMap['screenshot.png'];
-                    if(imgUrl){
-                        var currentTime = parseVideoTimeFromDuration(document.querySelector('video').currentTime*1000);
-                        // 这里通过backgroud.js把截图和时间戳转发到content.js
-                        chrome.runtime.sendMessage({
-                            action: "screenInsert",
-                            imgUrl: imgUrl,
-                            currentTime: currentTime
-                        }, function(response) {
-                            console.log("content.js receive response => "+JSON.stringify(response));
-                        });
-                    }else{
-                        console.error("截图失败");
-                    }
-                }else{
-                    document.querySelector('video').pause();
-                }
-                sendResponse({result: "ok"})
-                return true; // 保持消息通道打开直到sendResponse被调用
-            }
-
             // 外部视频截图指令
             if (request.action === "screenshotOuterVideo") {
                 // 判断当前页面的iframe地址是否和request.frameUrl相同
@@ -392,7 +289,7 @@ $(function(){
                 sendResponse({result: "ok"})
                 return true; // 保持消息通道打开直到sendResponse被调用
             }
-            
+
 
             // bilibili 正片页面 注入下载按钮
             if (request.action === "injectBilibiliZhengPianButton" && currentPageUrl.indexOf('bilibili.com/bangumi/play') != -1) {
@@ -410,19 +307,19 @@ $(function(){
             }
 
             // 百度云盘 注入下载按钮
-            if (request.action === "injectBaiduPanButton" && currentPageUrl.indexOf('pan.baidu.com/disk/main') != -1) {
-                console.log(request.data.list)
-                if(true){
-                    // 先移除老的下载按钮
-                    document.querySelectorAll("#CRX-container").forEach(function (item) {
-                        item.remove();
-                    })
-                    // 注入下载按钮
-                    injectBaiduPanButton(request.data.list);
-                }
-                sendResponse({result: "ok"})
-                return true; // 保持消息通道打开直到sendResponse被调用
-            }            
+            // if (request.action === "injectBaiduPanButton" && currentPageUrl.indexOf('pan.baidu.com/disk/main') != -1) {
+            //     console.log(request.data.list)
+            //     if(true){
+            //         // 先移除老的下载按钮
+            //         document.querySelectorAll("#CRX-container").forEach(function (item) {
+            //             item.remove();
+            //         })
+            //         // 注入下载按钮
+            //         injectBaiduPanButton(request.data.list);
+            //     }
+            //     sendResponse({result: "ok"})
+            //     return true; // 保持消息通道打开直到sendResponse被调用
+            // }            
 
             // bilibili 合集页面 注入下载按钮
             if (request.action === "injectBilibiliHeJiButton" && currentPageUrl.indexOf('bilibili.com/video') != -1) {
@@ -597,61 +494,61 @@ function injectBilibiliVideoDownButton(){
     }
 }
 
-function injectBaiduPanButton(data){
-        // 创建一个div容器（可选，如果只需要按钮则不需要）
-        var crxContainer = document.getElementById("button-container");
-        if(!crxContainer){
-            crxContainer = document.createElement('div');
-            crxContainer.id = "button-container";
-            crxContainer.style.position = 'fixed'; // 设置为固定定位
-            // 顶部垂直居中对齐
-            crxContainer.style.top = '5%';
-            // 设置里面的按钮间隔50px
-            crxContainer.style.padding = '50px';
-            // 居中对齐
-            crxContainer.style.left = '50%';
-            crxContainer.style.zIndex = '1000'; // 确保它位于其他元素之上
-        }
+// function injectBaiduPanButton(data){
+//         // 创建一个div容器（可选，如果只需要按钮则不需要）
+//         var crxContainer = document.getElementById("button-container");
+//         if(!crxContainer){
+//             crxContainer = document.createElement('div');
+//             crxContainer.id = "button-container";
+//             crxContainer.style.position = 'fixed'; // 设置为固定定位
+//             // 顶部垂直居中对齐
+//             crxContainer.style.top = '5%';
+//             // 设置里面的按钮间隔50px
+//             crxContainer.style.padding = '50px';
+//             // 居中对齐
+//             crxContainer.style.left = '50%';
+//             crxContainer.style.zIndex = '1000'; // 确保它位于其他元素之上
+//         }
 
-        // 创建并填充按钮
-        const crxButton = document.createElement('button');
-        crxButton.type = 'button';
-        crxButton.position = 'absolute';
-        crxButton.style.marginLeft = "10px";
-        crxButton.style.backgroundColor = 'red'; // 直接在元素上设置样式，而不是通过innerHTML
-        crxButton.style.width = '64px';
-        crxButton.style.height = '28px';
-        crxButton.style.zIndex = '1000'; // 确保它位于其他元素之上
-        // 单独视频页面
-        crxButton.textContent = "下载";
-        // 将按钮添加到div容器中（如果需要的话）
-        crxContainer.appendChild(crxButton);
-        // 将容器添加到页面的body开头
-        document.body.insertBefore(crxContainer, document.body.firstChild);
+//         // 创建并填充按钮
+//         const crxButton = document.createElement('button');
+//         crxButton.type = 'button';
+//         crxButton.position = 'absolute';
+//         crxButton.style.marginLeft = "10px";
+//         crxButton.style.backgroundColor = 'red'; // 直接在元素上设置样式，而不是通过innerHTML
+//         crxButton.style.width = '64px';
+//         crxButton.style.height = '28px';
+//         crxButton.style.zIndex = '1000'; // 确保它位于其他元素之上
+//         // 单独视频页面
+//         crxButton.textContent = "下载";
+//         // 将按钮添加到div容器中（如果需要的话）
+//         crxContainer.appendChild(crxButton);
+//         // 将容器添加到页面的body开头
+//         document.body.insertBefore(crxContainer, document.body.firstChild);
 
-        crxButton.addEventListener('click', function() {
-            console.log('下载！');
-            var titles = document.querySelectorAll(".wp-s-pan-file-main__nav-item-title.text-ellip");
-            var title = titles[titles.length-1].innerText;
-            // 遍历data
-            data.forEach(async function (item, index) {
-                // 获取视频标题
-                var videoTitle = item.server_filename;
-                var path = encodeURIComponent(item.path);
-                // 获取视频地址
-                var videoUrl = `https://pan.baidu.com/pfile/video?path=${path}`;
-                console.log(videoTitle+":"+videoUrl);
-                // 调用思源接口创建分片文件
-                json = {
-                    "notebook": notebook,
-                    "path": "/"+title+"/"+videoTitle,
-                    "markdown":`<span data-type="a" data-href="###">${videoUrl}</span>`
-                }
-                // 调用思源创建文档api
-                await invokeSiyuanApi("http://127.0.0.1:6806/api/filetree/createDocWithMd",json)
-            })
-        });
-}
+//         crxButton.addEventListener('click', function() {
+//             console.log('下载！');
+//             var titles = document.querySelectorAll(".wp-s-pan-file-main__nav-item-title.text-ellip");
+//             var title = titles[titles.length-1].innerText;
+//             // 遍历data
+//             data.forEach(async function (item, index) {
+//                 // 获取视频标题
+//                 var videoTitle = item.server_filename;
+//                 var path = encodeURIComponent(item.path);
+//                 // 获取视频地址
+//                 var videoUrl = `https://pan.baidu.com/pfile/video?path=${path}`;
+//                 console.log(videoTitle+":"+videoUrl);
+//                 // 调用思源接口创建分片文件
+//                 json = {
+//                     "notebook": notebook,
+//                     "path": "/"+title+"/"+videoTitle,
+//                     "markdown":`<span data-type="a" data-href="###">${videoUrl}</span>`
+//                 }
+//                 // 调用思源创建文档api
+//                 await invokeSiyuanApi("http://127.0.0.1:6806/api/filetree/createDocWithMd",json)
+//             })
+//         });
+// }
 
 /**
  * 正片注入下载按钮 走劫持逻辑
