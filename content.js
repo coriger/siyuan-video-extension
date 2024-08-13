@@ -9,6 +9,12 @@ $(function(){
         }else if(currentPageUrl.indexOf('bilibili.com/video') != -1){
             // bilibili 列表 &&单视频   合集需要单独劫持
             injectBilibiliVideoDownButton()
+        }else if(currentPageUrl.indexOf('youtube.com/watch') != -1){
+            // 单页面下载按钮
+            injectYoutubeVideoDownButton()
+        }else if(currentPageUrl.indexOf('youtube.com/playlist') != -1){
+            // 列表页面下载按钮
+            injectYoutubePlaylistDownButton()
         }
         
         // 监听点击事件  这里主要是处理思源页面中的时间戳标签点击事件
@@ -80,7 +86,6 @@ $(function(){
                 // 这里还需要判断一下视频详情页地址是否和当前页面匹配
                 if(document.URL == request.videoUrl){
                     document.querySelector('video').currentTime = request.time;
-                    document.querySelector('video').click();
                     document.querySelector('video').play();
                     sendResponse({result: "ok"})
                     return true; // 保持消息通道打开直到sendResponse被调用
@@ -306,21 +311,6 @@ $(function(){
                 return true; // 保持消息通道打开直到sendResponse被调用
             }
 
-            // 百度云盘 注入下载按钮
-            // if (request.action === "injectBaiduPanButton" && currentPageUrl.indexOf('pan.baidu.com/disk/main') != -1) {
-            //     console.log(request.data.list)
-            //     if(true){
-            //         // 先移除老的下载按钮
-            //         document.querySelectorAll("#CRX-container").forEach(function (item) {
-            //             item.remove();
-            //         })
-            //         // 注入下载按钮
-            //         injectBaiduPanButton(request.data.list);
-            //     }
-            //     sendResponse({result: "ok"})
-            //     return true; // 保持消息通道打开直到sendResponse被调用
-            // }            
-
             // bilibili 合集页面 注入下载按钮
             if (request.action === "injectBilibiliHeJiButton" && currentPageUrl.indexOf('bilibili.com/video') != -1) {
                 console.log(request.data.data.View.ugc_season)
@@ -493,62 +483,6 @@ function injectBilibiliVideoDownButton(){
         });
     }
 }
-
-// function injectBaiduPanButton(data){
-//         // 创建一个div容器（可选，如果只需要按钮则不需要）
-//         var crxContainer = document.getElementById("button-container");
-//         if(!crxContainer){
-//             crxContainer = document.createElement('div');
-//             crxContainer.id = "button-container";
-//             crxContainer.style.position = 'fixed'; // 设置为固定定位
-//             // 顶部垂直居中对齐
-//             crxContainer.style.top = '5%';
-//             // 设置里面的按钮间隔50px
-//             crxContainer.style.padding = '50px';
-//             // 居中对齐
-//             crxContainer.style.left = '50%';
-//             crxContainer.style.zIndex = '1000'; // 确保它位于其他元素之上
-//         }
-
-//         // 创建并填充按钮
-//         const crxButton = document.createElement('button');
-//         crxButton.type = 'button';
-//         crxButton.position = 'absolute';
-//         crxButton.style.marginLeft = "10px";
-//         crxButton.style.backgroundColor = 'red'; // 直接在元素上设置样式，而不是通过innerHTML
-//         crxButton.style.width = '64px';
-//         crxButton.style.height = '28px';
-//         crxButton.style.zIndex = '1000'; // 确保它位于其他元素之上
-//         // 单独视频页面
-//         crxButton.textContent = "下载";
-//         // 将按钮添加到div容器中（如果需要的话）
-//         crxContainer.appendChild(crxButton);
-//         // 将容器添加到页面的body开头
-//         document.body.insertBefore(crxContainer, document.body.firstChild);
-
-//         crxButton.addEventListener('click', function() {
-//             console.log('下载！');
-//             var titles = document.querySelectorAll(".wp-s-pan-file-main__nav-item-title.text-ellip");
-//             var title = titles[titles.length-1].innerText;
-//             // 遍历data
-//             data.forEach(async function (item, index) {
-//                 // 获取视频标题
-//                 var videoTitle = item.server_filename;
-//                 var path = encodeURIComponent(item.path);
-//                 // 获取视频地址
-//                 var videoUrl = `https://pan.baidu.com/pfile/video?path=${path}`;
-//                 console.log(videoTitle+":"+videoUrl);
-//                 // 调用思源接口创建分片文件
-//                 json = {
-//                     "notebook": notebook,
-//                     "path": "/"+title+"/"+videoTitle,
-//                     "markdown":`<span data-type="a" data-href="###">${videoUrl}</span>`
-//                 }
-//                 // 调用思源创建文档api
-//                 await invokeSiyuanApi("http://127.0.0.1:6806/api/filetree/createDocWithMd",json)
-//             })
-//         });
-// }
 
 /**
  * 正片注入下载按钮 走劫持逻辑
