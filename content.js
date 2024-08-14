@@ -1,3 +1,8 @@
+let lastTarget;
+let lastRange;
+let insertDefault = true;
+let screenDefault = true;
+
 $(function(){
         // 获取当前tab页面的url  根据不同域名进行不同的注入处理
         currentPageUrl = document.location.href;
@@ -6,6 +11,113 @@ $(function(){
         if(currentPageUrl.indexOf('/stage/build/desktop') != -1){
             // 思源页面  注入时间戳按钮
             injectVideoJumpButton()
+            document.body.addEventListener('mousedown', function(event) {
+                var target = event.target;
+                if(target.tagName.toLowerCase() === 'div' && target.getAttribute('contenteditable') === 'true'){
+                    // 保存这个 作为最后一次编辑器点击的节点位置
+                    lastTarget = target;
+                    let sel = window.getSelection();
+                    if (sel.rangeCount > 0) {
+                        lastRange = sel.getRangeAt(0);
+                    }
+                }
+                if(lastTarget){
+                    console.log("mousedown lastTarget is " + lastTarget.innerHTML);
+                }
+            })
+
+            document.body.addEventListener('mouseup', function(event) {
+                var target = event.target;
+                if(target.tagName.toLowerCase() === 'div' && target.getAttribute('contenteditable') === 'true'){
+                    lastTarget = target;
+                    let sel = window.getSelection();
+                    if (sel.rangeCount > 0) {
+                        lastRange = sel.getRangeAt(0);
+                    }
+                }
+                if(lastTarget){
+                    console.log("mouseup lastTarget is " + lastTarget.innerHTML);
+                }
+            })
+
+            // 监听点击事件  这里主要是处理思源页面中的时间戳标签点击事件
+            // 这里把时间戳形态统一处理方便未来扩展
+            // 格式：链接：空  锚文本：时间戳  标题：视频页链接,这个必须要有，这样的话时间戳才好被其他文档引用，对于被引用的时间戳打开形式可以用悬浮窗或者固定窗口来实现，这种情况一般也是辅助文本来使用，可能适用于学生考试党，或者一些视频教程
+            // 在思源任何位置出现被点击先判断当前页是否存在iframe，存在则替换iframe链接播放
+            document.body.addEventListener('click', function(event) {
+                requestAnimationFrame(function() {
+                    if (lastTarget && lastRange) {
+                        let sel = window.getSelection();
+                        sel.removeAllRanges();
+                        sel.addRange(lastRange);
+                    }
+                    // 判断当前节点是否是div，且具有contenteditable属性
+                    var target = event.target;
+    
+                    console.log('Clicked node:', target.tagName.toLowerCase());
+                    // console.log('Clicked node:', target.getAttribute('contenteditable'));
+                    // 获取当前这个节点的所有html  包括它的标签属性
+                    console.log("node html : ",target.innerHTML);
+    
+                    // 查询当前节点所有的属性以及对应的属性值
+                    // console.log("node all attribute : ",target.attributes);
+    
+                    if (target.tagName.toLowerCase() === 'span') {
+                        var href = target.getAttribute('data-href');
+                        if(href == '##'){
+                            // iframe内嵌模式
+                            // 内部跳转
+                            var time = target.innerText;
+                            // 去除[]
+                            time = time.replace(/\[|\]/g, '');
+                            // 这里可以同时固定住当前页面的视频
+                            document.querySelectorAll(".fn__flex-1.protyle").forEach(function (node) {
+                                // 获取class属性值
+                                var className = node.getAttribute("class")
+                                if(className == 'fn__flex-1 protyle'){
+                                    // 判断当前文档树是否展开 如果展开 点击关闭
+                                    // dock__item ariaLabel dock__item--active
+                                    var menuNode = document.querySelector(".dock__item.ariaLabel.dock__item--active");
+                                    if(menuNode){
+                                        // 如果是大纲  就不执行关闭
+                                        var dataTitle = menuNode.getAttribute("data-title");
+                                        if(dataTitle && dataTitle == "大纲"){
+                                            console.log("大纲模式,不处理");
+                                        }else{
+                                            menuNode.click();
+                                        }
+                                    }
+    
+                                    // 每次点击时间戳 都要把当前页面iframe固定住
+                                    node.querySelectorAll(".iframe-content")[0].style.position = "fixed";
+                                    // 移除iframe的宽度width
+                                    node.querySelectorAll("iframe")[0].style.removeProperty("width");
+    
+                                    var frameUrl = node.querySelectorAll("iframe")[0].getAttribute("src")
+                                    // 跳转当前内嵌页面视频进度
+                                    dumpInnerVideo(time, frameUrl);
+                                }
+                            })
+                        }else if(href == '###'){
+                            // 左右分屏模式  这种更通用
+                            var hrefText = target.innerText;
+                            // 判断文本类型   http链接 还是 时间戳
+                            if(hrefText && hrefText.indexOf('http') != -1){
+                                // 跳转页面  先定位tab  没有则创建  这种一般是首次打开 没有时间戳笔记的时候快速定位视频页面
+                                openOuterVideo(hrefText);
+                            }else if(hrefText && hrefText.indexOf(':') != -1){
+                                // 时间戳
+                                var time = hrefText.replace(/\[|\]/g, '');
+                                var videoUrl = target.getAttribute('data-title');
+                                if(videoUrl && videoUrl !=""){
+                                    // 跳转外部页面视频进度 
+                                    dumpOuterVideo(time, videoUrl);
+                                }
+                            }
+                        }
+                    }
+                })
+            }, true); // 我需要在所有监听之后执行，所以这里需要设置useCapture为true
         }else if(currentPageUrl.indexOf('bilibili.com/video') != -1){
             // bilibili 列表 &&单视频   合集需要单独劫持
             injectBilibiliVideoDownButton()
@@ -17,64 +129,7 @@ $(function(){
             injectYoutubePlaylistDownButton()
         }
         
-        // 监听点击事件  这里主要是处理思源页面中的时间戳标签点击事件
-        document.body.addEventListener('click', function(event) {
-            var target = event.target;
-            if (target.tagName.toLowerCase() === 'span') {
-                var href = target.getAttribute('data-href');
-                if(href == '##'){
-                    // iframe内嵌模式
-                    // 内部跳转
-                    var time = target.innerText;
-                    // 去除[]
-                    time = time.replace(/\[|\]/g, '');
-                    // 这里可以同时固定住当前页面的视频
-                    document.querySelectorAll(".fn__flex-1.protyle").forEach(function (node) {
-                        // 获取class属性值
-                        var className = node.getAttribute("class")
-                        if(className == 'fn__flex-1 protyle'){
-                            // 判断当前文档树是否展开 如果展开 点击关闭
-                            // dock__item ariaLabel dock__item--active
-                            var menuNode = document.querySelector(".dock__item.ariaLabel.dock__item--active");
-                            if(menuNode){
-                                // 如果是大纲  就不执行关闭
-                                var dataTitle = menuNode.getAttribute("data-title");
-                                if(dataTitle && dataTitle == "大纲"){
-                                    console.log("大纲模式,不处理");
-                                }else{
-                                    menuNode.click();
-                                }
-                            }
 
-                            // 每次点击时间戳 都要把当前页面iframe固定住
-                            node.querySelectorAll(".iframe-content")[0].style.position = "fixed";
-                            // 移除iframe的宽度width
-                            node.querySelectorAll("iframe")[0].style.removeProperty("width");
-
-                            var frameUrl = node.querySelectorAll("iframe")[0].getAttribute("src")
-                            // 跳转当前内嵌页面视频进度
-                            dumpInnerVideo(time, frameUrl);
-                        }
-                    })
-                }else if(href == '###'){
-                    // 左右分屏模式  这种更通用
-                    var hrefText = target.innerText;
-                    // 判断文本类型   http链接 还是 时间戳
-                    if(hrefText && hrefText.indexOf('http') != -1){
-                        // 跳转页面  先定位tab  没有则创建  这种一般是首次打开 没有时间戳笔记的时候快速定位视频页面
-                        openOuterVideo(hrefText);
-                    }else if(hrefText && hrefText.indexOf(':') != -1){
-                        // 时间戳
-                        var time = hrefText.replace(/\[|\]/g, '');
-                        var videoUrl = target.getAttribute('data-title');
-                        if(videoUrl && videoUrl !=""){
-                            // 跳转外部页面视频进度 
-                            dumpOuterVideo(time, videoUrl);
-                        }
-                    }
-                }
-            }
-        }, true); // 使用捕获模式来确保在所有其他事件监听器之前执行
 
         // 跨域通信  监听来自background的消息
         chrome.runtime.onMessage.addListener(async function(request, sender, sendResponse) {
@@ -143,33 +198,53 @@ $(function(){
                                     var videoUrl = node.querySelector("span[data-href='###']").innerText;
                                     if(videoUrl){
                                         videoTimestamp.innerHTML = `#### <span data-type="a" data-href="###" data-title="${videoUrl}">[${currentTime}]</span>：`;
-                                        // 从当前节点里找.sb
-                                        var nodeId = node.querySelector(".protyle-breadcrumb__item.protyle-breadcrumb__item--active").getAttribute("data-node-id");
-                                        // 这里调用一下思源插入内容快的接口
-                                        var result = await invokeSiyuanApi("http://127.0.0.1:6806/api/block/appendBlock",{
-                                            "data": videoTimestamp.innerHTML,
-                                            "dataType": "markdown",
-                                            "parentID": nodeId
-                                        });
-                                        result = await invokeSiyuanApi("http://127.0.0.1:6806/api/block/appendBlock",{
-                                            "data": `>`,
-                                            "dataType": "markdown",
-                                            "parentID": nodeId
-                                        });
-                                        // 这里移动焦点到最新插入的节点
-                                        console.log("result is => "+result.data[0].doOperations[0].id)
-                                        var newNode = document.querySelector(`[data-node-id="${result.data[0].doOperations[0].id}"]`)
-                                        if (newNode) {
-                                            node.querySelector(".protyle-content.protyle-content--transition").scrollTop += 1000;
-                                            newNode.setAttribute('tabindex', '0');
-                                            newNode.focus();
+                                        // 从当前节点里找.sb   .protyle-background.protyle-background--enable
+                                        var nodeId = node.querySelector(".protyle-background.protyle-background--enable").getAttribute("data-node-id");
+
+                                        if(lastTarget && !screenDefault){
+                                            console.log("lastTarget存在，之前：",lastTarget.innerHTML);
+                                            console.log(lastTarget.innerHTML);
+                                            insertTextAtCursor(lastTarget,` <span data-type="a" data-href="###" data-title="${videoUrl}">[${currentTime}]</span> `);
+                                            console.log("lastTarget存在，之后：",lastTarget.innerHTML);
+                                            // 调用更新接口
+                                            var result = await invokeSiyuanApi("http://127.0.0.1:6806/api/block/updateBlock",{
+                                                "data": lastTarget.innerHTML,
+                                                "dataType": "markdown",
+                                                "id": lastTarget.parentElement.getAttribute("data-node-id")
+                                            });
+                                            // 插入图片  
+                                            result = await invokeSiyuanApi("http://127.0.0.1:6806/api/block/appendBlock",{
+                                                "data": `​![image](${imgUrl})`,
+                                                "dataType": "markdown",
+                                                "parentID": lastTarget.parentElement.getAttribute("data-node-id")
+                                            });
+                                        }else{
+                                            // 这里调用一下思源插入内容快的接口
+                                            var result = await invokeSiyuanApi("http://127.0.0.1:6806/api/block/appendBlock",{
+                                                "data": videoTimestamp.innerHTML,
+                                                "dataType": "markdown",
+                                                "parentID": nodeId
+                                            });
+                                            result = await invokeSiyuanApi("http://127.0.0.1:6806/api/block/appendBlock",{
+                                                "data": `>`,
+                                                "dataType": "markdown",
+                                                "parentID": nodeId
+                                            });
+                                            // 这里移动焦点到最新插入的节点
+                                            console.log("result is => "+result.data[0].doOperations[0].id)
+                                            var newNode = document.querySelector(`[data-node-id="${result.data[0].doOperations[0].id}"]`)
+                                            if (newNode) {
+                                                node.querySelector(".protyle-content.protyle-content--transition").scrollTop += 1000;
+                                                newNode.setAttribute('tabindex', '0');
+                                                newNode.focus();
+                                            }
+                                            // 插入图片  
+                                            result = await invokeSiyuanApi("http://127.0.0.1:6806/api/block/appendBlock",{
+                                                "data": `>​![image](${imgUrl})`,
+                                                "dataType": "markdown",
+                                                "parentID": nodeId
+                                            });
                                         }
-                                        // 插入图片  
-                                        result = await invokeSiyuanApi("http://127.0.0.1:6806/api/block/appendBlock",{
-                                            "data": `>​![image](${imgUrl})`,
-                                            "dataType": "markdown",
-                                            "parentID": nodeId
-                                        });
                                     }
                             }
                         })
@@ -200,31 +275,50 @@ $(function(){
                                     // iframe内嵌
                                     // 从当前节点里找.sb
                                     var nodeId = node.querySelectorAll(".sb")[1].getAttribute("data-node-id");
-                                    // 这里调用一下思源插入内容快的接口
-                                    var result = await invokeSiyuanApi("http://127.0.0.1:6806/api/block/appendBlock",{
-                                        "data": videoTimestamp.innerHTML,
-                                        "dataType": "markdown",
-                                        "parentID": nodeId
-                                    });
-                                    result = await invokeSiyuanApi("http://127.0.0.1:6806/api/block/appendBlock",{
-                                        "data": `>`,
-                                        "dataType": "markdown",
-                                        "parentID": nodeId
-                                    });
-                                    // 这里移动焦点到最新插入的节点
-                                    console.log("result is => "+result.data[0].doOperations[0].id)
-                                    var newNode = document.querySelector(`[data-node-id="${result.data[0].doOperations[0].id}"]`)
-                                    if (newNode) {
-                                        node.querySelector(".protyle-content.protyle-content--transition").scrollTop += 1000;
-                                        newNode.setAttribute('tabindex', '0');
-                                        newNode.focus();
+                                    
+                                    if(lastTarget && !screenDefault){
+                                        console.log("lastTarget存在，之前：",lastTarget.innerHTML);
+                                        console.log(lastTarget.innerHTML);
+                                        insertTextAtCursor(lastTarget,` <span data-type="a" data-href="##">[${currentTime}]</span> `);
+                                        // 调用更新接口
+                                        var result = await invokeSiyuanApi("http://127.0.0.1:6806/api/block/updateBlock",{
+                                            "data": lastTarget.innerHTML,
+                                            "dataType": "markdown",
+                                            "id": lastTarget.parentElement.getAttribute("data-node-id")
+                                        });
+                                        // 插入图片  
+                                        result = await invokeSiyuanApi("http://127.0.0.1:6806/api/block/appendBlock",{
+                                            "data": ` ​![image](${imgUrl}) `,
+                                            "dataType": "markdown",
+                                            "parentID": lastTarget.parentElement.getAttribute("data-node-id")
+                                        });
+                                    }else{
+                                        // 这里调用一下思源插入内容快的接口
+                                        var result = await invokeSiyuanApi("http://127.0.0.1:6806/api/block/appendBlock",{
+                                            "data": videoTimestamp.innerHTML,
+                                            "dataType": "markdown",
+                                            "parentID": nodeId
+                                        });
+                                        result = await invokeSiyuanApi("http://127.0.0.1:6806/api/block/appendBlock",{
+                                            "data": `>`,
+                                            "dataType": "markdown",
+                                            "parentID": nodeId
+                                        });
+                                        // 这里移动焦点到最新插入的节点
+                                        console.log("result is => "+result.data[0].doOperations[0].id)
+                                        var newNode = document.querySelector(`[data-node-id="${result.data[0].doOperations[0].id}"]`)
+                                        if (newNode) {
+                                            node.querySelector(".protyle-content.protyle-content--transition").scrollTop += 1000;
+                                            newNode.setAttribute('tabindex', '0');
+                                            newNode.focus();
+                                        }
+                                        // 插入图片  
+                                        result = await invokeSiyuanApi("http://127.0.0.1:6806/api/block/appendBlock",{
+                                            "data": `>​![image](${imgUrl})`,
+                                            "dataType": "markdown",
+                                            "parentID": nodeId
+                                        });
                                     }
-                                    // 插入图片  
-                                    result = await invokeSiyuanApi("http://127.0.0.1:6806/api/block/appendBlock",{
-                                        "data": `>​![image](${imgUrl})`,
-                                        "dataType": "markdown",
-                                        "parentID": nodeId
-                                    });
                                 }
                             }
                         })
@@ -329,6 +423,32 @@ $(function(){
             }
         });
 });
+
+
+function insertTextAtCursor(target, html) {
+    // 插入 HTML 到目标元素的末尾
+    target.innerHTML = target.innerHTML + html;
+
+    // 创建一个 Range 对象
+    let range = document.createRange();
+
+    // 获取目标元素的最后一个子节点
+    let lastChild = target.lastChild;
+
+    // 将光标定位到最后一个子节点的末尾
+    range.setStartAfter(lastChild);
+    range.collapse(true);
+
+    // 获取当前的 Selection 对象
+    let sel = window.getSelection();
+    sel.removeAllRanges(); // 清除所有选区
+    sel.addRange(range); // 添加新的 Range
+
+    // 聚焦到目标元素
+    target.focus();
+    lastRange = range;
+    return target.innerHTML;
+}
 
 
 /**
@@ -715,27 +835,38 @@ function injectVideoJumpButton(){
                 return;
             }
 
-            // 创建新元素
-            const insertDiv = document.createElement('div');
-            insertDiv.innerHTML = `<div data-menu="true" id="extension-video-insert" class="toolbar__item ariaLabel" aria-label="插入时间戳" data-position="right">🐞</div>`;
+            // 模版插入
+            const insert1Div = document.createElement('div');
+            insert1Div.innerHTML = `<div data-menu="true" id="extension-video-insert1" class="toolbar__item ariaLabel" aria-label="默认时间戳" data-position="right">🐞</div>`;
 
+            // 自由插入
+            const insert2Div = document.createElement('div');
+            insert2Div.innerHTML = `<div data-menu="true" id="extension-video-insert2" class="toolbar__item ariaLabel" aria-label="自由时间戳" data-position="right">🐸</div>`;
+            
             const resetDiv = document.createElement('div');
             resetDiv.innerHTML = `<div data-menu="true" id="extension-video-reset" class="toolbar__item ariaLabel" aria-label="还原窗口" data-position="right">🪲</div>`;
 
-            const screenDiv = document.createElement('div');
-            screenDiv.innerHTML = `<div data-menu="true" id="extension-video-screen" class="toolbar__item ariaLabel" aria-label="截图" data-position="right">📷</div>`;
+            const screen1Div = document.createElement('div');
+            screen1Div.innerHTML = `<div data-menu="true" id="extension-video-screen1" class="toolbar__item ariaLabel" aria-label="默认截图" data-position="right">🐷</div>`;
+
+            const screen2Div = document.createElement('div');
+            screen2Div.innerHTML = `<div data-menu="true" id="extension-video-screen2" class="toolbar__item ariaLabel" aria-label="自由截图" data-position="right">🐯</div>`;
 
             // 获取#toolbarVIP元素
             const toolbarVIP = document.getElementById('toolbarVIP');
 
             // 将新元素添加到#toolbarVIP后面
-            toolbarVIP.insertAdjacentElement('afterend', insertDiv);
-            insertDiv.insertAdjacentElement('afterend', resetDiv);
-            resetDiv.insertAdjacentElement('afterend', screenDiv);
+            toolbarVIP.insertAdjacentElement('afterend', insert1Div);
+            insert1Div.insertAdjacentElement('afterend', insert2Div);
+            insert2Div.insertAdjacentElement('afterend', resetDiv);
+            resetDiv.insertAdjacentElement('afterend', screen1Div);
+            screen1Div.insertAdjacentElement('afterend', screen2Div);
 
-            var insertBtn = document.getElementById('extension-video-insert');
+            var insert1Btn = document.getElementById('extension-video-insert1');
+            var insert2Btn = document.getElementById('extension-video-insert2');
             var resetBtn = document.getElementById('extension-video-reset');
-            var screenBtn = document.getElementById('extension-video-screen');
+            var screen1Btn = document.getElementById('extension-video-screen1');
+            var screen2Btn = document.getElementById('extension-video-screen2');
     
             // 重置视频窗口监听事件
             resetBtn.addEventListener('click', function() {
@@ -757,153 +888,234 @@ function injectVideoJumpButton(){
                 });
             });
 
-            // 截图监听事件
-            screenBtn.addEventListener('click', function() {
-                // 获取当前窗口的iframe的url
-                document.querySelectorAll(".fn__flex-1.protyle").forEach(function (node) {
-                    // 获取class属性值
-                    var className = node.getAttribute("class")
-                    if(className == 'fn__flex-1 protyle'){
-                        // 判断当前文档树是否展开 如果展开 点击关闭
-                        // dock__item ariaLabel dock__item--active
-                        var menuNode = document.querySelector(".dock__item.ariaLabel.dock__item--active");
-                        if(menuNode){
-                            var dataTitle = menuNode.getAttribute("data-title");
-                            if(dataTitle && dataTitle == "大纲"){
-                                console.log("大纲模式,不处理");
-                            }else{
-                                menuNode.click();
-                            }
-                        }
 
-                        // 先判断iframe存不存在  存在调整样式
-                        var iframe = node.querySelectorAll("iframe")[0];
-                        if(iframe){
-                            // 每次点击时间戳 都要把当前页面iframe固定住
-                            // .iframe-content样式中 position:relative;
-                            node.querySelectorAll(".iframe-content")[0].style.position = "fixed";
-                            // iframe-content的width要和.protyle-wysiwyg.iframe中的width保持一致
-                            node.querySelectorAll("iframe")[0].style.removeProperty("width");
-    
-                            // 先找到对应的iframe  通知backgroud.js转发截图请求
-                            var frameUrl = node.querySelectorAll("iframe")[0].getAttribute("src")
-                            chrome.runtime.sendMessage({action: "screenshot",frameUrl:frameUrl}, function(response) {
-                            });
-                        }else{
-                            console.log("iframe不存在,分屏模式");
-                            // 获取当前窗口首个span[data-href='###']且innerText为http的值
-                            var videoUrl = node.querySelector("span[data-href='###']").innerText;
-                            if(videoUrl && videoUrl.indexOf("http") != -1){
-                                // 通过backgroud.js 发送截图指令
-                                chrome.runtime.sendMessage({action: "screenshotOuterVideo",videoUrl:videoUrl}, function(response) {
-                                });
-                            }
+            // 默认截图监听事件
+            screen1Btn.addEventListener('click', function() {
+                console.log('默认截图按钮被点击了！');
+                screenDefault = true;
+                screenVideoTime();
+            });
+
+            // 自由截图监听事件
+            screen2Btn.addEventListener('click', function() {
+                console.log('自由截图按钮被点击了！');
+                setTimeout(function() {
+                    if (lastTarget && lastRange) {
+                        let sel = window.getSelection();
+                        sel.removeAllRanges();
+                        if(lastRange){
+                            sel.addRange(lastRange);  // 恢复之前保存的光标位置
+                        }
+                        screenDefault = false;
+                        screenVideoTime();
+                    }else{
+                        screenDefault = true;
+                        screenVideoTime();
+                    }
+                }, 0);
+            });
+
+            // 默认时间戳按钮点击事件
+            insert1Btn.addEventListener('click', function() {
+                console.log('默认时间戳按钮被点击了！');
+                insertDefault = true;
+                insertVideoTime();
+            });
+
+            // 自由时间戳按钮点击事件
+            insert2Btn.addEventListener('click', function() {
+                console.log('自由时间戳按钮被点击了！');
+
+                setTimeout(function() {
+                    if (lastTarget && lastRange) {
+                        let sel = window.getSelection();
+                        sel.removeAllRanges();
+                        if(lastRange){
+                            sel.addRange(lastRange);  // 恢复之前保存的光标位置
+                        }
+                        insertDefault = false;
+                        insertVideoTime();
+                    }else{
+                        insertDefault = true;
+                        insertVideoTime();
+                    }
+                }, 0);
+            });
+}
+
+
+function screenVideoTime(){
+    // 获取当前窗口的iframe的url
+    document.querySelectorAll(".fn__flex-1.protyle").forEach(function (node) {
+        // 获取class属性值
+        var className = node.getAttribute("class")
+        if(className == 'fn__flex-1 protyle'){
+            // 判断当前文档树是否展开 如果展开 点击关闭
+            // dock__item ariaLabel dock__item--active
+            var menuNode = document.querySelector(".dock__item.ariaLabel.dock__item--active");
+            if(menuNode){
+                var dataTitle = menuNode.getAttribute("data-title");
+                if(dataTitle && dataTitle == "大纲"){
+                    console.log("大纲模式,不处理");
+                }else{
+                    menuNode.click();
+                }
+            }
+
+            // 先判断iframe存不存在  存在调整样式
+            var iframe = node.querySelectorAll("iframe")[0];
+            if(iframe){
+                // 每次点击时间戳 都要把当前页面iframe固定住
+                // .iframe-content样式中 position:relative;
+                node.querySelectorAll(".iframe-content")[0].style.position = "fixed";
+                // iframe-content的width要和.protyle-wysiwyg.iframe中的width保持一致
+                node.querySelectorAll("iframe")[0].style.removeProperty("width");
+
+                // 先找到对应的iframe  通知backgroud.js转发截图请求
+                var frameUrl = node.querySelectorAll("iframe")[0].getAttribute("src")
+                chrome.runtime.sendMessage({action: "screenshot",frameUrl:frameUrl}, function(response) {
+                });
+            }else{
+                console.log("iframe不存在,分屏模式");
+                // 获取当前窗口首个span[data-href='###']且innerText为http的值
+                var videoUrl = node.querySelector("span[data-href='###']").innerText;
+                if(videoUrl && videoUrl.indexOf("http") != -1){
+                    // 通过backgroud.js 发送截图指令
+                    chrome.runtime.sendMessage({action: "screenshotOuterVideo",videoUrl:videoUrl}, function(response) {
+                    });
+                }
+            }
+        }
+    });
+}
+
+function insertVideoTime(){
+    // 获取当前窗口的iframe的url
+    document.querySelectorAll(".fn__flex-1.protyle").forEach(function (node) {
+        // 获取class属性值
+        var className = node.getAttribute("class")
+        if(className == 'fn__flex-1 protyle'){
+            // 判断当前文档树是否展开 如果展开 点击关闭
+            // dock__item ariaLabel dock__item--active
+            var menuNode = document.querySelector(".dock__item.ariaLabel.dock__item--active");
+            if(menuNode){
+                var dataTitle = menuNode.getAttribute("data-title");
+                if(dataTitle && dataTitle == "大纲"){
+                    console.log("大纲模式,不处理");
+                }else{
+                    menuNode.click();
+                }
+            }
+
+            // 判断iframe存不存在  存在调整样式
+            var iframe = node.querySelectorAll("iframe")[0];
+            if(iframe){
+                // 每次点击时间戳 都要把当前页面iframe固定住
+                // .iframe-content样式中 position:relative;
+                node.querySelectorAll(".iframe-content")[0].style.position = "fixed";
+                // iframe-content的width要和.protyle-wysiwyg.iframe中的width保持一致
+                node.querySelectorAll("iframe")[0].style.removeProperty("width");
+
+                var frameUrl = node.querySelectorAll("iframe")[0].getAttribute("src");
+                // 发送消息到background.js获取iframe视频时间
+                chrome.runtime.sendMessage({action: "queryInnerIframe",frameUrl:frameUrl}, async function(response) {
+                    console.log('Received iframe video time :', response.currentTime);
+                    // 往页面插入时间戳
+                    const videoTimestamp = document.createElement('div');
+                    videoTimestamp.innerHTML = `#### <span data-type="a" data-href="##">[${response.currentTime}]</span>：`
+                    
+                    // 两种插入策略  一种是直接插入文档尾端  一种是插入编辑器最后一次编辑的位置
+                    // 判断lastTarget是否存在
+                    if(lastTarget && !insertDefault){
+                        console.log("lastTarget存在，之前：",lastTarget.innerHTML);
+                        console.log(lastTarget.innerHTML);
+                        insertTextAtCursor(lastTarget,` <span data-type="a" data-href="##">[${response.currentTime}]</span> `);
+                        console.log("lastTarget存在，之后：",lastTarget.innerHTML);
+                        // 调用更新接口
+                        var result = await invokeSiyuanApi("http://127.0.0.1:6806/api/block/updateBlock",{
+                            "data": lastTarget.innerHTML,
+                            "dataType": "markdown",
+                            "id": lastTarget.parentElement.getAttribute("data-node-id")
+                        });
+                    }else{
+                        console.log("lastTarget不存在");
+                        // 从当前节点里找.sb
+                        var nodeId = node.querySelectorAll(".sb")[1].getAttribute("data-node-id");
+                        // 这里调用一下思源插入内容快的接口
+                        var result = await invokeSiyuanApi("http://127.0.0.1:6806/api/block/appendBlock",{
+                            "data": videoTimestamp.innerHTML,
+                            "dataType": "markdown",
+                            "parentID": nodeId
+                        });
+                        result = await invokeSiyuanApi("http://127.0.0.1:6806/api/block/appendBlock",{
+                            "data": `>`,
+                            "dataType": "markdown",
+                            "parentID": nodeId
+                        });
+                        // 这里移动焦点到最新插入的节点
+                        console.log("result is => "+result.data[0].doOperations[0].id)
+                        var newNode = document.querySelector(`[data-node-id="${result.data[0].doOperations[0].id}"]`)
+                        if (newNode) {
+                            node.querySelector(".protyle-content.protyle-content--transition").scrollTop += 1000;
+                            newNode.setAttribute('tabindex', '0');
+                            newNode.focus();
                         }
                     }
                 });
-            });
+            }else{
+                console.log("iframe不存在,分屏模式");
+                // 从这里面去拿 
+                var videoUrl = node.querySelector("span[data-href='###']").innerText;
+                // 获取当前窗口首个span[data-href='###']且innerText为http的值
+                if(videoUrl && videoUrl.indexOf("http") != -1){
+                    // 通过backgroud.js 获取视频页面进度
+                    chrome.runtime.sendMessage({action: "queryOuterVideo",videoUrl:videoUrl}, async function(response) {
+                        // 拿到时间戳  往当前文档插入数据
+                        console.log('Received iframe video time :', response.currentTime);
+                        // 往页面插入时间戳
+                        const videoTimestamp = document.createElement('div');
+                        videoTimestamp.innerHTML = `#### <span data-type="a" data-href="###" data-title="${videoUrl}">[${response.currentTime}]</span>：`
+                        var dataNodeId = lastTarget.parentElement.getAttribute("data-node-id");
+                        // alert(dataNodeId)
 
-            // 时间戳按钮点击事件
-            insertBtn.addEventListener('click', function() {
-                // 这里添加您的爬虫处理代码
-                console.log('按钮被点击了！');
-
-                // 获取当前窗口的iframe的url
-                document.querySelectorAll(".fn__flex-1.protyle").forEach(function (node) {
-                    // 获取class属性值
-                    var className = node.getAttribute("class")
-                    if(className == 'fn__flex-1 protyle'){
-                        // 判断当前文档树是否展开 如果展开 点击关闭
-                        // dock__item ariaLabel dock__item--active
-                        var menuNode = document.querySelector(".dock__item.ariaLabel.dock__item--active");
-                        if(menuNode){
-                            var dataTitle = menuNode.getAttribute("data-title");
-                            if(dataTitle && dataTitle == "大纲"){
-                                console.log("大纲模式,不处理");
-                            }else{
-                                menuNode.click();
-                            }
-                        }
-
-                        // 判断iframe存不存在  存在调整样式
-                        var iframe = node.querySelectorAll("iframe")[0];
-                        if(iframe){
-                            // 每次点击时间戳 都要把当前页面iframe固定住
-                            // .iframe-content样式中 position:relative;
-                            node.querySelectorAll(".iframe-content")[0].style.position = "fixed";
-                            // iframe-content的width要和.protyle-wysiwyg.iframe中的width保持一致
-                            node.querySelectorAll("iframe")[0].style.removeProperty("width");
-    
-                            var frameUrl = node.querySelectorAll("iframe")[0].getAttribute("src");
-                            // 发送消息到background.js获取iframe视频时间
-                            chrome.runtime.sendMessage({action: "queryInnerIframe",frameUrl:frameUrl}, async function(response) {
-                                console.log('Received iframe video time :', response.currentTime);
-                                // 往页面插入时间戳
-                                const videoTimestamp = document.createElement('div');
-                                videoTimestamp.innerHTML = `#### <span data-type="a" data-href="##">[${response.currentTime}]</span>：`
-                                
-                                // 从当前节点里找.sb
-                                var nodeId = node.querySelectorAll(".sb")[1].getAttribute("data-node-id");
-                                // 这里调用一下思源插入内容快的接口
-                                var result = await invokeSiyuanApi("http://127.0.0.1:6806/api/block/appendBlock",{
-                                    "data": videoTimestamp.innerHTML,
-                                    "dataType": "markdown",
-                                    "parentID": nodeId
-                                });
-                                result = await invokeSiyuanApi("http://127.0.0.1:6806/api/block/appendBlock",{
-                                    "data": `>`,
-                                    "dataType": "markdown",
-                                    "parentID": nodeId
-                                });
-                                // 这里移动焦点到最新插入的节点
-                                console.log("result is => "+result.data[0].doOperations[0].id)
-                                var newNode = document.querySelector(`[data-node-id="${result.data[0].doOperations[0].id}"]`)
-                                if (newNode) {
-                                    node.querySelector(".protyle-content.protyle-content--transition").scrollTop += 1000;
-                                    newNode.setAttribute('tabindex', '0');
-                                    newNode.focus();
-                                }
+                        if(lastTarget && !insertDefault && dataNodeId){
+                            console.log("lastTarget存在，之前：",lastTarget.innerHTML);
+                            console.log(lastTarget.innerHTML);
+                            insertTextAtCursor(lastTarget,` <span data-type="a" data-href="###" data-title="${videoUrl}">[${response.currentTime}]</span> `);
+                            console.log("lastTarget存在，之后：",lastTarget.innerHTML);
+                            // 调用更新接口
+                            var result = await invokeSiyuanApi("http://127.0.0.1:6806/api/block/updateBlock",{
+                                "data": lastTarget.innerHTML,
+                                "dataType": "markdown",
+                                "id": dataNodeId
                             });
                         }else{
-                            console.log("iframe不存在,分屏模式");
-                            // 从这里面去拿 
-                            var videoUrl = node.querySelector("span[data-href='###']").innerText;
-                            // 获取当前窗口首个span[data-href='###']且innerText为http的值
-                            if(videoUrl && videoUrl.indexOf("http") != -1){
-                                // 通过backgroud.js 获取视频页面进度
-                                chrome.runtime.sendMessage({action: "queryOuterVideo",videoUrl:videoUrl}, async function(response) {
-                                    // 拿到时间戳  往当前文档插入数据
-                                    console.log('Received iframe video time :', response.currentTime);
-                                    // 往页面插入时间戳
-                                    const videoTimestamp = document.createElement('div');
-                                    videoTimestamp.innerHTML = `#### <span data-type="a" data-href="###" data-title="${videoUrl}">[${response.currentTime}]</span>：`
-                                    
-                                    var nodeId = node.querySelector(".protyle-breadcrumb__item.protyle-breadcrumb__item--active").getAttribute("data-node-id");
-                                    // 这里调用一下思源插入内容快的接口
-                                    var result = await invokeSiyuanApi("http://127.0.0.1:6806/api/block/appendBlock",{
-                                        "data": videoTimestamp.innerHTML,
-                                        "dataType": "markdown",
-                                        "parentID": nodeId
-                                    });
-                                    result = await invokeSiyuanApi("http://127.0.0.1:6806/api/block/appendBlock",{
-                                        "data": `>`,
-                                        "dataType": "markdown",
-                                        "parentID": nodeId
-                                    });
-                                    // 这里移动焦点到最新插入的节点
-                                    console.log("result is => "+result.data[0].doOperations[0].id)
-                                    var newNode = document.querySelector(`[data-node-id="${result.data[0].doOperations[0].id}"]`)
-                                    if (newNode) {
-                                        node.querySelector(".protyle-content.protyle-content--transition").scrollTop += 1000;
-                                        newNode.setAttribute('tabindex', '0');
-                                        newNode.focus();
-                                    }
-                                });
+                            var nodeId = node.querySelector(".protyle-background.protyle-background--enable").getAttribute("data-node-id");
+                            // 这里调用一下思源插入内容快的接口
+                            var result = await invokeSiyuanApi("http://127.0.0.1:6806/api/block/appendBlock",{
+                                "data": videoTimestamp.innerHTML,
+                                "dataType": "markdown",
+                                "parentID": nodeId
+                            });
+                            result = await invokeSiyuanApi("http://127.0.0.1:6806/api/block/appendBlock",{
+                                "data": `>`,
+                                "dataType": "markdown",
+                                "parentID": nodeId
+                            });
+                            // 这里移动焦点到最新插入的节点
+                            console.log("result is => "+result.data[0].doOperations[0].id)
+                            var newNode = document.querySelector(`[data-node-id="${result.data[0].doOperations[0].id}"]`)
+                            if (newNode) {
+                                node.querySelector(".protyle-content.protyle-content--transition").scrollTop += 1000;
+                                newNode.setAttribute('tabindex', '0');
+                                newNode.focus();
                             }
                         }
-                    }
-                })
-            });
+                    });
+                }
+            }
+        }
+    })
 }
 
 /**
