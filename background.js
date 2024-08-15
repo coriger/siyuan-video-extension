@@ -17,12 +17,14 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
 
     // 查询外部视频进度的指令
     if (request.action === "queryOuterVideo") {
+        var tabExist = false;
         chrome.tabs.query({}, function(tabs) {
             // 遍历tabs 
             for (var i = 0; i < tabs.length; i++) {
                 // 判断url是否存在 
                 if (tabs[i].url == request.videoUrl){
                     console.log("找到tab");
+                    tabExist = true;
                     // 假设你已经有了tabs数组，并且知道要切换到的标签页的索引i
                     // 首先，使用chrome.windows.update将目标窗口置于最前面（如果它不在最前面的话）
                     chrome.windows.update(tabs[i].windowId, {focused: true}, function() {
@@ -38,12 +40,15 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
                     return;
                 }
             }
-            console.log("没有找到tab");
-            // 发送提示通知
-            chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
-                // 发送消息到iframe中的content脚本
-                chrome.tabs.sendMessage(tabs[0].id, {action: "noticMsg",msg:"请在浏览器中打开当前视频"},function(response){});
-            });
+
+            if(!tabExist){
+                console.log("没有找到tab");
+                // 发送提示通知
+                chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
+                    // 发送消息到iframe中的content脚本
+                    chrome.tabs.sendMessage(tabs[0].id, {action: "noticMsg",msg:"请在浏览器中打开当前视频"},function(response){});
+                });
+            }
         });
         return true; // 保持消息通道打开以响应异步请求
     }
@@ -124,11 +129,14 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
 
     // 外部视频截图指令
     if (request.action === "screenshotOuterVideo") {
+        var tabExist = false;
+        console.log("screenshotOuterVideo : " + request.videoUrl);
         chrome.tabs.query({}, function(tabs) {
             // 遍历tabs 
             for (var i = 0; i < tabs.length; i++) {
                 // 判断url是否存在 
                 if (tabs[i].url == request.videoUrl){
+                    tabExist = true;
                     console.log("已找到tab:"+request.action+" "+request.videoUrl);
                     // 假设你已经有了tabs数组，并且知道要切换到的标签页的索引i
                     // 首先，使用chrome.windows.update将目标窗口置于最前面（如果它不在最前面的话）
@@ -141,7 +149,17 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
                     return;
                 }
             }
+
+            if(!tabExist){
+                console.log("没有找到tab");
+                // 发送提示通知
+                chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
+                    // 发送消息到iframe中的content脚本
+                    chrome.tabs.sendMessage(tabs[0].id, {action: "noticMsg",msg:"请在浏览器中打开当前视频"},function(response){});
+                });
+            }
         });
+        
         return true; // 保持消息通道打开以响应异步请求
     }
 
@@ -157,6 +175,7 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
 
     // 外部视频写入截图指令
     if (request.action === "screenOuterInsert") {
+        var tabExist = false;
         console.log("screenOuterInsert : " + request.imgUrl + " " + request.currentTime);
         chrome.tabs.query({}, function(tabs) {
             // 遍历tabs 
@@ -164,6 +183,7 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
                 // 判断url是否存在 
                 if (tabs[i].url == request.videoUrl){
                     console.log("已找到tab");
+                    tabExist = true;
                     // 假设你已经有了tabs数组，并且知道要切换到的标签页的索引i
                     // 首先，使用chrome.windows.update将目标窗口置于最前面（如果它不在最前面的话）
                     chrome.windows.update(tabs[i].windowId, {focused: true}, function() {
@@ -177,6 +197,15 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
                     });
                     return;
                 }
+            }
+
+            if(!tabExist){
+                console.log("没有找到tab");
+                // 发送提示通知
+                chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
+                    // 发送消息到iframe中的content脚本
+                    chrome.tabs.sendMessage(tabs[0].id, {action: "noticMsg",msg:"请在浏览器中打开当前视频"},function(response){});
+                });
             }
         });
         return true; // 保持消息通道打开以响应异步请求
