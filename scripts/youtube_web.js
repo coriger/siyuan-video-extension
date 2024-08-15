@@ -99,6 +99,7 @@ function injectYoutubePlaylistDownButton() {
         console.log("下载列表");
         // 获取视频标题
         var title = document.title.trim();
+        var author = document.querySelector(".metadata-action-bar.style-scope.ytd-playlist-header-renderer").querySelector(".yt-simple-endpoint.style-scope.yt-formatted-string").innerHTML.trim();
         // 获取视频了表
         var videoList = document.querySelectorAll(".yt-simple-endpoint.style-scope.ytd-playlist-video-renderer");
         // 遍历视频列表
@@ -110,7 +111,7 @@ function injectYoutubePlaylistDownButton() {
             // 这里调用思源接口创建根目录
             var json = {
                 notebook: notebook,
-                path: "/Video-视频库/" + title + "/" + videoTitle,
+                path: "/Video-视频库/" + author + "/" + title + "/" + videoTitle,
                 markdown: `<span data-type="a" data-href="###">${videoUrl}</span>`,
             };
             // 调用思源创建文档api
