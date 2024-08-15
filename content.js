@@ -133,6 +133,14 @@ $(function(){
             console.log("onMessage request action is " + request.action);
             console.log("onMessage current page is " + currentPageUrl);
             
+            if (request.action === "noticMsg") {
+                await invokeSiyuanApi("http://127.0.0.1:6806/api/notification/pushMsg",{
+                    "msg": request.msg,
+                    "timeout": 3000
+                });
+                return true;
+            }
+
             // 外部视频跳转
             if (request.action === "dumpOuterVideo") {
                 // 这里还需要判断一下视频详情页地址是否和当前页面匹配
@@ -203,7 +211,7 @@ $(function(){
                                 // 告警
                                 await invokeSiyuanApi("http://127.0.0.1:6806/api/notification/pushMsg",{
                                     "msg": "请双击输入位置选择插入位置",
-                                    "timeout": 7000
+                                    "timeout": 3000
                                 });
                             }else{
                                 var blockMd = await invokeSiyuanApi("http://127.0.0.1:6806/api/block/getBlockKramdown",{
@@ -289,7 +297,7 @@ $(function(){
                                     // 告警
                                     await invokeSiyuanApi("http://127.0.0.1:6806/api/notification/pushMsg",{
                                         "msg": "请双击输入位置选择插入位置",
-                                        "timeout": 7000
+                                        "timeout": 3000
                                     });
                                 }else{
                                     var blockMd = await invokeSiyuanApi("http://127.0.0.1:6806/api/block/getBlockKramdown",{
@@ -1053,7 +1061,7 @@ function insertVideoTime(){
                             // 告警
                             await invokeSiyuanApi("http://127.0.0.1:6806/api/notification/pushMsg",{
                                 "msg": "请双击输入位置选择插入位置",
-                                "timeout": 7000
+                                "timeout": 3000
                             });
                         }else{
                             var blockMd = await invokeSiyuanApi("http://127.0.0.1:6806/api/block/getBlockKramdown",{
@@ -1113,7 +1121,7 @@ function insertVideoTime(){
                                 // 告警
                                 await invokeSiyuanApi("http://127.0.0.1:6806/api/notification/pushMsg",{
                                     "msg": "请双击输入位置选择插入位置",
-                                    "timeout": 7000
+                                    "timeout": 3000
                                 });
                             }else{
                                 var blockMd = await invokeSiyuanApi("http://127.0.0.1:6806/api/block/getBlockKramdown",{
@@ -1194,66 +1202,4 @@ function dumpInnerVideo(time,frameUrl){
     // 消息先发送到background.js 再由background.js 发送到各个content.js  找到匹配的iframe进行跳转
     chrome.runtime.sendMessage({action: "dumpInnerVideo",time:time,frameUrl:frameUrl}, function(response) {
     });
-}
-
-/**
- * 调用思源api
- * @param {} url 
- * @param {*} json 
- * @returns 
- */
-async function invokeSiyuanApi(url,json){
-    console.log("invoke siyuan api:"+url)
-    console.log("invoke siyuan json:"+JSON.stringify(json))
-
-    try {
-        const response = await fetch(url, {
-            method: "POST",
-            headers: {
-                "Authorization": Authorization,
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify(json)
-        });
-        // 确保响应状态码是2xx
-        if (!response.ok) {
-            throw new Error('Network response was not ok');
-        }
-        // 你可以继续处理响应，例如获取JSON数据
-        const data = await response.json();
-        console.log("invoke siyuan api success,result is "+JSON.stringify(data))
-        return data;
-    } catch (error) {
-        console.error('There has been a problem with your invokeSiyuanApi operation:', error);
-    }
-}
-
-
-/**
- * 上传文件
- * @param {*} url 
- * @param {*} json 
- * @returns 
- */
-async function invokeSiyuanUploadApi(formData){
-
-    try {
-        const response = await fetch("http://127.0.0.1:6806/api/asset/upload", {
-            method: "POST",
-            headers: {
-                "Authorization": Authorization,
-            },
-            body: formData
-        });
-        // 确保响应状态码是2xx
-        if (!response.ok) {
-            throw new Error('Network response was not ok');
-        }
-        // 你可以继续处理响应，例如获取JSON数据
-        const data = await response.json();
-        console.log("invoke siyuan upload api success,result is "+JSON.stringify(data))
-        return data;
-    } catch (error) {
-        console.error('There has been a problem with your invokeSiyuanApi operation:', error);
-    }
 }

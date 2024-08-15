@@ -39,6 +39,11 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
                 }
             }
             console.log("没有找到tab");
+            // 发送提示通知
+            chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
+                // 发送消息到iframe中的content脚本
+                chrome.tabs.sendMessage(tabs[0].id, {action: "noticMsg",msg:"请在浏览器中打开当前视频"},function(response){});
+            });
         });
         return true; // 保持消息通道打开以响应异步请求
     }
