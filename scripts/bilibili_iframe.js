@@ -85,6 +85,7 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
                             action: "screenInsert",
                             imgUrl: imgUrl,
                             currentTime: currentTime,
+                            frameUrl: request.frameUrl
                         },
                         function (response) {
                             // console.log("content.js receive response => " + JSON.stringify(response));

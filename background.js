@@ -145,7 +145,7 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
         chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
             // 遍历tabs
             // 发送消息到iframe中的content脚本
-            chrome.tabs.sendMessage(tabs[0].id, {action: "screenInsert",imgUrl: request.imgUrl,currentTime:request.currentTime});
+            chrome.tabs.sendMessage(tabs[0].id, {action: "screenInsert",imgUrl: request.imgUrl,currentTime:request.currentTime,frameUrl:request.frameUrl});
         });
         return true; // 保持消息通道打开以响应异步请求
     }
@@ -166,7 +166,7 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
                         chrome.tabs.update(tabs[i].id, {active: true}, function() {
                             // 发送给所有content脚本的页面
                             for (var j = 0; j < tabs.length; j++) {
-                                chrome.tabs.sendMessage(tabs[j].id, {action: "screenOuterInsert",imgUrl: request.imgUrl,currentTime:request.currentTime});
+                                chrome.tabs.sendMessage(tabs[j].id, {action: "screenOuterInsert",imgUrl: request.imgUrl,currentTime:request.currentTime,videoUrl: request.videoUrl});
                             }
                         });
                     });
