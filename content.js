@@ -192,26 +192,38 @@ $(function(){
                     // 获取class属性值
                     var className = node.getAttribute("class");
                     if (className == "fn__flex-1 protyle") {
-                        var dataNodeId = lastTarget.parentElement.getAttribute("data-node-id");
-                        console.log("dataNodeId is => "+dataNodeId);
-                        if (lastTarget && !screenDefault && dataNodeId) {
-                            var blockMd = await invokeSiyuanApi("http://127.0.0.1:6806/api/block/getBlockKramdown",{
-                                "id": dataNodeId
-                            });
-                            var newMd = cleanKramdown(blockMd.data.kramdown) + ` [[${currentTime}]](### "${videoUrl}")`
-                            // 调用更新接口
-                            var result = await invokeSiyuanApi("http://127.0.0.1:6806/api/block/updateBlock",{
-                                "data": newMd,
-                                "dataType": "markdown",
-                                "id": dataNodeId
-                            });
-                            // 插入图片
-                            result = await invokeSiyuanApi("http://127.0.0.1:6806/api/block/appendBlock", {
-                                data: ` ​![image](${imgUrl}) `,
-                                dataType: "markdown",
-                                parentID: dataNodeId
-                            });
-                        } else {
+                        // 焦点追加模式
+                        if(!screenDefault){
+                            var dataNodeId;
+                            if(lastTarget){
+                                dataNodeId = lastTarget.parentElement.getAttribute("data-node-id");
+                            }
+                            console.log("dataNodeId is => "+dataNodeId);
+                            if(!dataNodeId){
+                                // 告警
+                                await invokeSiyuanApi("http://127.0.0.1:6806/api/notification/pushMsg",{
+                                    "msg": "请双击输入位置选择插入位置",
+                                    "timeout": 7000
+                                });
+                            }else{
+                                var blockMd = await invokeSiyuanApi("http://127.0.0.1:6806/api/block/getBlockKramdown",{
+                                    "id": dataNodeId
+                                });
+                                var newMd = cleanKramdown(blockMd.data.kramdown) + ` [[${currentTime}]](### "${videoUrl}")`
+                                // 调用更新接口
+                                var result = await invokeSiyuanApi("http://127.0.0.1:6806/api/block/updateBlock",{
+                                    "data": newMd,
+                                    "dataType": "markdown",
+                                    "id": dataNodeId
+                                });
+                                // 插入图片
+                                result = await invokeSiyuanApi("http://127.0.0.1:6806/api/block/appendBlock", {
+                                    data: ` ​![image](${imgUrl}) `,
+                                    dataType: "markdown",
+                                    parentID: dataNodeId
+                                });
+                            }
+                        }else{
                             // 从当前节点里找.sb   .protyle-background.protyle-background--enable
                             var parentID = node.querySelector(".protyle-background.protyle-background--enable").getAttribute("data-node-id");
                         
@@ -266,27 +278,38 @@ $(function(){
                         // 判断当前是哪种模式写入   iframe内嵌 还是外部视频
                         var iframe = node.querySelector("iframe");
                         if (iframe) {
-                            // 自由截图模式
-                            var dataNodeId = lastTarget.parentElement.getAttribute("data-node-id");
-                            console.log("dataNodeId is => "+dataNodeId);
-                            if (lastTarget && !screenDefault && dataNodeId) {
-                                var blockMd = await invokeSiyuanApi("http://127.0.0.1:6806/api/block/getBlockKramdown",{
-                                    "id": dataNodeId
-                                });
-                                var newMd = cleanKramdown(blockMd.data.kramdown) + ` [[${currentTime}]](## "${frameUrl}")`
-                                // 调用更新接口
-                                var result = await invokeSiyuanApi("http://127.0.0.1:6806/api/block/updateBlock",{
-                                    "data": newMd,
-                                    "dataType": "markdown",
-                                    "id": dataNodeId
-                                });
-                                // 插入图片
-                                result = await invokeSiyuanApi("http://127.0.0.1:6806/api/block/appendBlock", {
-                                    data: ` ​![image](${imgUrl}) `,
-                                    dataType: "markdown",
-                                    parentID: dataNodeId
-                                });
-                            } else {
+                            // 焦点追加模式
+                            if(!screenDefault){
+                                var dataNodeId;
+                                if(lastTarget){
+                                    dataNodeId = lastTarget.parentElement.getAttribute("data-node-id");
+                                }
+                                console.log("dataNodeId is => "+dataNodeId);
+                                if(!dataNodeId){
+                                    // 告警
+                                    await invokeSiyuanApi("http://127.0.0.1:6806/api/notification/pushMsg",{
+                                        "msg": "请双击输入位置选择插入位置",
+                                        "timeout": 7000
+                                    });
+                                }else{
+                                    var blockMd = await invokeSiyuanApi("http://127.0.0.1:6806/api/block/getBlockKramdown",{
+                                        "id": dataNodeId
+                                    });
+                                    var newMd = cleanKramdown(blockMd.data.kramdown) + ` [[${currentTime}]](## "${frameUrl}")`
+                                    // 调用更新接口
+                                    var result = await invokeSiyuanApi("http://127.0.0.1:6806/api/block/updateBlock",{
+                                        "data": newMd,
+                                        "dataType": "markdown",
+                                        "id": dataNodeId
+                                    });
+                                    // 插入图片
+                                    result = await invokeSiyuanApi("http://127.0.0.1:6806/api/block/appendBlock", {
+                                        data: ` ​![image](${imgUrl}) `,
+                                        dataType: "markdown",
+                                        parentID: dataNodeId
+                                    });
+                                }
+                            }else{
                                 // 从当前节点里找.sb
                                 var parentID = node.querySelectorAll(".sb")[1].getAttribute("data-node-id");
 
@@ -319,7 +342,6 @@ $(function(){
                         }
                     }
                 });
-                sendResponse({ result: "ok" });
                 return true; // 保持消息通道打开直到sendResponse被调用
             }
 
@@ -1019,21 +1041,32 @@ function insertVideoTime(){
                 // 发送消息到background.js获取iframe视频时间
                 chrome.runtime.sendMessage({action: "queryInnerIframe",frameUrl:frameUrl}, async function(response) {
                     console.log('Received iframe video time :', response.currentTime);
-                    // 两种插入策略  一种是直接插入文档尾端  一种是插入编辑器最后一次编辑的位置
-                    // 判断lastTarget是否存在
-                    var dataNodeId = lastTarget.parentElement.getAttribute("data-node-id");
-                    console.log("dataNodeId is => "+dataNodeId);
-                    if(lastTarget && !insertDefault && dataNodeId){
-                        var blockMd = await invokeSiyuanApi("http://127.0.0.1:6806/api/block/getBlockKramdown",{
-                            "id": dataNodeId
-                        });
-                        var newMd = cleanKramdown(blockMd.data.kramdown) + ` [[${response.currentTime}]](## "${frameUrl}")`
-                        // 调用更新接口
-                        var result = await invokeSiyuanApi("http://127.0.0.1:6806/api/block/updateBlock",{
-                            "data": newMd,
-                            "dataType": "markdown",
-                            "id": dataNodeId
-                        });
+
+                    // 焦点追加模式
+                    if(!insertDefault){
+                        var dataNodeId;
+                        if(lastTarget){
+                            dataNodeId = lastTarget.parentElement.getAttribute("data-node-id");
+                        }
+                        console.log("dataNodeId is => "+dataNodeId);
+                        if(!dataNodeId){
+                            // 告警
+                            await invokeSiyuanApi("http://127.0.0.1:6806/api/notification/pushMsg",{
+                                "msg": "请双击输入位置选择插入位置",
+                                "timeout": 7000
+                            });
+                        }else{
+                            var blockMd = await invokeSiyuanApi("http://127.0.0.1:6806/api/block/getBlockKramdown",{
+                                "id": dataNodeId
+                            });
+                            var newMd = cleanKramdown(blockMd.data.kramdown) + ` [[${response.currentTime}]](## "${frameUrl}")`
+                            // 调用更新接口
+                            var result = await invokeSiyuanApi("http://127.0.0.1:6806/api/block/updateBlock",{
+                                "data": newMd,
+                                "dataType": "markdown",
+                                "id": dataNodeId
+                            });
+                        }
                     }else{
                         // 从当前节点里找.sb
                         var parentID = node.querySelectorAll(".sb")[1].getAttribute("data-node-id");
@@ -1068,22 +1101,34 @@ function insertVideoTime(){
                     chrome.runtime.sendMessage({action: "queryOuterVideo",videoUrl:videoUrl}, async function(response) {
                         // 拿到时间戳  往当前文档插入数据
                         console.log('Received iframe video time :', response.currentTime);
-                        var dataNodeId = lastTarget.parentElement.getAttribute("data-node-id");
-                        console.log("dataNodeId is => "+dataNodeId);
-                        // 自由插入模式  直接插入文档尾端
-                        if(lastTarget && !insertDefault && dataNodeId){
-                            var blockMd = await invokeSiyuanApi("http://127.0.0.1:6806/api/block/getBlockKramdown",{
-                                "id": dataNodeId
-                            });
-                            var newMd = cleanKramdown(blockMd.data.kramdown) + ` [[${response.currentTime}]](### "${videoUrl}")`
-                            // 调用更新接口
-                            var result = await invokeSiyuanApi("http://127.0.0.1:6806/api/block/updateBlock",{
-                                "data": newMd,
-                                "dataType": "markdown",
-                                "id": dataNodeId
-                            });
+
+                        // 焦点追加模式
+                        if(!insertDefault){
+                            var dataNodeId;
+                            if(lastTarget){
+                                dataNodeId = lastTarget.parentElement.getAttribute("data-node-id");
+                            }
+                            console.log("dataNodeId is => "+dataNodeId);
+                            if(!dataNodeId){
+                                // 告警
+                                await invokeSiyuanApi("http://127.0.0.1:6806/api/notification/pushMsg",{
+                                    "msg": "请双击输入位置选择插入位置",
+                                    "timeout": 7000
+                                });
+                            }else{
+                                var blockMd = await invokeSiyuanApi("http://127.0.0.1:6806/api/block/getBlockKramdown",{
+                                    "id": dataNodeId
+                                });
+                                var newMd = cleanKramdown(blockMd.data.kramdown) + ` [[${response.currentTime}]](### "${videoUrl}")`
+                                // 调用更新接口
+                                var result = await invokeSiyuanApi("http://127.0.0.1:6806/api/block/updateBlock",{
+                                    "data": newMd,
+                                    "dataType": "markdown",
+                                    "id": dataNodeId
+                                });
+                            }
                         }else{
-                            // 模版插入模式  在第一个sb节点后面插入
+                            // 尾部追加模式  在第一个sb节点后面插入
                             var parentID = node.querySelector(".protyle-background.protyle-background--enable").getAttribute("data-node-id");
                             // 这里调用一下思源插入内容快的接口
                             var result = await invokeSiyuanApi("http://127.0.0.1:6806/api/block/appendBlock",{
