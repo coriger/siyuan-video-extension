@@ -46,11 +46,6 @@ $(function(){
             // 在思源任何位置出现被点击先判断当前页是否存在iframe，存在则替换iframe链接播放
             document.body.addEventListener('click', function(event) {
                 requestAnimationFrame(function() {
-                    if (lastTarget && lastRange) {
-                        let sel = window.getSelection();
-                        sel.removeAllRanges();
-                        sel.addRange(lastRange);
-                    }
                     // 判断当前节点是否是div，且具有contenteditable属性
                     var target = event.target;
     
@@ -64,54 +59,64 @@ $(function(){
     
                     if (target.tagName.toLowerCase() === 'span') {
                         var href = target.getAttribute('data-href');
-                        if(href == '##'){
-                            // iframe内嵌模式
-                            // 内部跳转
-                            var time = target.innerText;
-                            // 去除[]
-                            time = time.replace(/\[|\]/g, '');
-                            // 这里可以同时固定住当前页面的视频
-                            document.querySelectorAll(".fn__flex-1.protyle").forEach(function (node) {
-                                // 获取class属性值
-                                var className = node.getAttribute("class")
-                                if(className == 'fn__flex-1 protyle'){
-                                    // 判断当前文档树是否展开 如果展开 点击关闭
-                                    // dock__item ariaLabel dock__item--active
-                                    var menuNode = document.querySelector(".dock__item.ariaLabel.dock__item--active");
-                                    if(menuNode){
-                                        // 如果是大纲  就不执行关闭
-                                        var dataTitle = menuNode.getAttribute("data-title");
-                                        if(dataTitle && dataTitle == "大纲"){
-                                            console.log("大纲模式,不处理");
-                                        }else{
-                                            menuNode.click();
+                        // 这里判断是不是时间戳链接  href:## 或者 ### 
+                        if(href == '##' || href == '###'){
+                            // 重置焦点
+                            if (lastTarget && lastRange) {
+                                let sel = window.getSelection();
+                                sel.removeAllRanges();
+                                sel.addRange(lastRange);
+                            }
+
+                            if(href == '##'){
+                                // iframe内嵌模式
+                                // 内部跳转
+                                var time = target.innerText;
+                                // 去除[]
+                                time = time.replace(/\[|\]/g, '');
+                                // 这里可以同时固定住当前页面的视频
+                                document.querySelectorAll(".fn__flex-1.protyle").forEach(function (node) {
+                                    // 获取class属性值
+                                    var className = node.getAttribute("class")
+                                    if(className == 'fn__flex-1 protyle'){
+                                        // 判断当前文档树是否展开 如果展开 点击关闭
+                                        // dock__item ariaLabel dock__item--active
+                                        var menuNode = document.querySelector(".dock__item.ariaLabel.dock__item--active");
+                                        if(menuNode){
+                                            // 如果是大纲  就不执行关闭
+                                            var dataTitle = menuNode.getAttribute("data-title");
+                                            if(dataTitle && dataTitle == "大纲"){
+                                                console.log("大纲模式,不处理");
+                                            }else{
+                                                menuNode.click();
+                                            }
                                         }
+        
+                                        // 每次点击时间戳 都要把当前页面iframe固定住
+                                        node.querySelectorAll(".iframe-content")[0].style.position = "fixed";
+                                        // 移除iframe的宽度width
+                                        node.querySelectorAll("iframe")[0].style.removeProperty("width");
+        
+                                        var frameUrl = node.querySelectorAll("iframe")[0].getAttribute("src")
+                                        // 跳转当前内嵌页面视频进度
+                                        dumpInnerVideo(time, frameUrl);
                                     }
-    
-                                    // 每次点击时间戳 都要把当前页面iframe固定住
-                                    node.querySelectorAll(".iframe-content")[0].style.position = "fixed";
-                                    // 移除iframe的宽度width
-                                    node.querySelectorAll("iframe")[0].style.removeProperty("width");
-    
-                                    var frameUrl = node.querySelectorAll("iframe")[0].getAttribute("src")
-                                    // 跳转当前内嵌页面视频进度
-                                    dumpInnerVideo(time, frameUrl);
-                                }
-                            })
-                        }else if(href == '###'){
-                            // 左右分屏模式  这种更通用
-                            var hrefText = target.innerText;
-                            // 判断文本类型   http链接 还是 时间戳
-                            if(hrefText && hrefText.indexOf('http') != -1){
-                                // 跳转页面  先定位tab  没有则创建  这种一般是首次打开 没有时间戳笔记的时候快速定位视频页面
-                                openOuterVideo(hrefText);
-                            }else if(hrefText && hrefText.indexOf(':') != -1){
-                                // 时间戳
-                                var time = hrefText.replace(/\[|\]/g, '');
-                                var videoUrl = target.getAttribute('data-title');
-                                if(videoUrl && videoUrl !=""){
-                                    // 跳转外部页面视频进度 
-                                    dumpOuterVideo(time, videoUrl);
+                                })
+                            }else if(href == '###'){
+                                // 左右分屏模式  这种更通用
+                                var hrefText = target.innerText;
+                                // 判断文本类型   http链接 还是 时间戳
+                                if(hrefText && hrefText.indexOf('http') != -1){
+                                    // 跳转页面  先定位tab  没有则创建  这种一般是首次打开 没有时间戳笔记的时候快速定位视频页面
+                                    openOuterVideo(hrefText);
+                                }else if(hrefText && hrefText.indexOf(':') != -1){
+                                    // 时间戳
+                                    var time = hrefText.replace(/\[|\]/g, '');
+                                    var videoUrl = target.getAttribute('data-title');
+                                    if(videoUrl && videoUrl !=""){
+                                        // 跳转外部页面视频进度 
+                                        dumpOuterVideo(time, videoUrl);
+                                    }
                                 }
                             }
                         }
