@@ -11,25 +11,16 @@ $(function(){
         if(currentPageUrl.indexOf('/stage/build/desktop') != -1){
             // 思源页面  注入时间戳按钮
             injectVideoJumpButton()
-            document.body.addEventListener('mousedown', function(event) {
-                var target = event.target;
-                if(target.tagName.toLowerCase() === 'div' && target.getAttribute('contenteditable') === 'true'){
-                    // 保存这个 作为最后一次编辑器点击的节点位置
-                    lastTarget = target;
-                    let sel = window.getSelection();
-                    if (sel.rangeCount > 0) {
-                        lastRange = sel.getRangeAt(0);
-                    }
-                }
-                if(lastTarget){
-                    // console.log("mousedown lastTarget is " + lastTarget.innerHTML);
-                }
-            })
-
+            // 监听鼠标事件
             document.body.addEventListener('mouseup', function(event) {
                 var target = event.target;
                 if(target.tagName.toLowerCase() === 'div' && target.getAttribute('contenteditable') === 'true'){
                     lastTarget = target;
+                    // 获取当前节点父节点的data-node-id
+                    console.log("mouseup : current node id is ",target.tagName.toLowerCase(),target.parentElement.getAttribute('data-node-id'));
+                    if(!target.parentElement.getAttribute('data-node-id')){
+                        console.log("mouseup : parent node id is ",target.innerText);
+                    }
                     let sel = window.getSelection();
                     if (sel.rangeCount > 0) {
                         lastRange = sel.getRangeAt(0);
@@ -49,7 +40,10 @@ $(function(){
                     // 判断当前节点是否是div，且具有contenteditable属性
                     var target = event.target;
     
-                    console.log('Clicked node:', target.tagName.toLowerCase());
+                    // console.log("click : current node id is ",target.tagName.toLowerCase(),target.parentElement.getAttribute('data-node-id'));
+                    // if(!target.parentElement.getAttribute('data-node-id')){
+                    //     console.log("click : parent node id is ",target.innerText);
+                    // }
                     // 获取当前这个节点的所有html  包括它的标签属性
                     // console.log("target innerHtml : ",target.innerHTML, target.getAttribute('contenteditable'));
     
@@ -198,8 +192,9 @@ $(function(){
                     // 获取class属性值
                     var className = node.getAttribute("class");
                     if (className == "fn__flex-1 protyle") {
-                        if (lastTarget && !screenDefault) {
-                            var dataNodeId = lastTarget.parentElement.getAttribute("data-node-id");
+                        var dataNodeId = lastTarget.parentElement.getAttribute("data-node-id");
+                        console.log("dataNodeId is => "+dataNodeId);
+                        if (lastTarget && !screenDefault && dataNodeId) {
                             var blockMd = await invokeSiyuanApi("http://127.0.0.1:6806/api/block/getBlockKramdown",{
                                 "id": dataNodeId
                             });
@@ -272,8 +267,9 @@ $(function(){
                         var iframe = node.querySelector("iframe");
                         if (iframe) {
                             // 自由截图模式
-                            if (lastTarget && !screenDefault) {
-                                var dataNodeId = lastTarget.parentElement.getAttribute("data-node-id");
+                            var dataNodeId = lastTarget.parentElement.getAttribute("data-node-id");
+                            console.log("dataNodeId is => "+dataNodeId);
+                            if (lastTarget && !screenDefault && dataNodeId) {
                                 var blockMd = await invokeSiyuanApi("http://127.0.0.1:6806/api/block/getBlockKramdown",{
                                     "id": dataNodeId
                                 });
@@ -1025,8 +1021,9 @@ function insertVideoTime(){
                     console.log('Received iframe video time :', response.currentTime);
                     // 两种插入策略  一种是直接插入文档尾端  一种是插入编辑器最后一次编辑的位置
                     // 判断lastTarget是否存在
-                    if(lastTarget && !insertDefault){
-                        var dataNodeId = lastTarget.parentElement.getAttribute("data-node-id");
+                    var dataNodeId = lastTarget.parentElement.getAttribute("data-node-id");
+                    console.log("dataNodeId is => "+dataNodeId);
+                    if(lastTarget && !insertDefault && dataNodeId){
                         var blockMd = await invokeSiyuanApi("http://127.0.0.1:6806/api/block/getBlockKramdown",{
                             "id": dataNodeId
                         });
@@ -1071,10 +1068,10 @@ function insertVideoTime(){
                     chrome.runtime.sendMessage({action: "queryOuterVideo",videoUrl:videoUrl}, async function(response) {
                         // 拿到时间戳  往当前文档插入数据
                         console.log('Received iframe video time :', response.currentTime);
-                        
+                        var dataNodeId = lastTarget.parentElement.getAttribute("data-node-id");
+                        console.log("dataNodeId is => "+dataNodeId);
                         // 自由插入模式  直接插入文档尾端
-                        if(lastTarget && !insertDefault){
-                            var dataNodeId = lastTarget.parentElement.getAttribute("data-node-id");
+                        if(lastTarget && !insertDefault && dataNodeId){
                             var blockMd = await invokeSiyuanApi("http://127.0.0.1:6806/api/block/getBlockKramdown",{
                                 "id": dataNodeId
                             });
@@ -1090,7 +1087,7 @@ function insertVideoTime(){
                             var parentID = node.querySelector(".protyle-background.protyle-background--enable").getAttribute("data-node-id");
                             // 这里调用一下思源插入内容快的接口
                             var result = await invokeSiyuanApi("http://127.0.0.1:6806/api/block/appendBlock",{
-                                "data": `#### [[${response.currentTime}]](### "${videoUrl}")`,
+                                "data": `#### [[${response.currentTime}]](### "${videoUrl}")：`,
                                 "dataType": "markdown",
                                 "parentID": parentID
                             });

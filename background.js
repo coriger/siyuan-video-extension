@@ -15,7 +15,7 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
         return true; // 保持消息通道打开以响应异步请求
     }
 
-    // 查询外部视频进度的指令  
+    // 查询外部视频进度的指令
     if (request.action === "queryOuterVideo") {
         chrome.tabs.query({}, function(tabs) {
             // 遍历tabs 
