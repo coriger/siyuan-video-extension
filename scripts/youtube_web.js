@@ -103,15 +103,15 @@ function injectYoutubePlaylistDownButton() {
         // 获取视频了表
         var videoList = document.querySelectorAll(".yt-simple-endpoint.style-scope.ytd-playlist-video-renderer");
         // 遍历视频列表
-        videoList.forEach(async function (item) {
+        videoList.forEach(async function (item, index) {
             // 获取视频标题
             var videoTitle = item.getAttribute("title");
-            // 获取视频作者
+            // 获取视频作者 /Video-视频库/" + author + "/" + title + "/" + (index+1) + videoTitle
             var videoUrl = "https://www.youtube.com"+item.getAttribute("href").split("&")[0];
             // 这里调用思源接口创建根目录
             var json = {
                 notebook: notebook,
-                path: "/Video-视频库/" + author + "/" + title + "/" + videoTitle,
+                path: `/Video-视频库/${author}/${title}/${index+1}-${videoTitle}`,
                 markdown: `<span data-type="a" data-href="###">${videoUrl}</span>`,
             };
             // 调用思源创建文档api

@@ -323,7 +323,7 @@ $(function(){
 
                                 // 这里调用一下思源插入内容快的接口
                                 var result = await invokeSiyuanApi("http://127.0.0.1:6806/api/block/appendBlock", {
-                                    data: `#### [[${currentTime}]](## "${frameUrl}")`,
+                                    data: `#### [[${currentTime}]](## "${frameUrl}")：`,
                                     dataType: "markdown",
                                     parentID: parentID,
                                 });
