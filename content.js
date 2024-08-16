@@ -490,35 +490,6 @@ $(function(){
         });
 });
 
-
-function insertTextAtCursor(target, html) {
-    // 插入 HTML 到目标元素的末尾
-    // target.innerHTML = target.innerHTML + html;
-    // 这里找到target的父节点，然后把新元素加入到父节点中作为最后一个子节点
-    target.insertAdjacentHTML('beforeend', html);
-
-    // 创建一个 Range 对象
-    let range = document.createRange();
-
-    // 获取目标元素的最后一个子节点
-    let lastChild = target.lastChild;
-
-    // 将光标定位到最后一个子节点的末尾
-    range.setStartAfter(lastChild);
-    range.collapse(true);
-
-    // 获取当前的 Selection 对象
-    let sel = window.getSelection();
-    sel.removeAllRanges(); // 清除所有选区
-    sel.addRange(range); // 添加新的 Range
-
-    // 聚焦到目标元素
-    // target.focus();
-    lastRange = range;
-    return target.innerHTML;
-}
-
-
 /**
  * 单视频&&选集页面 注入下载按钮
  */
