@@ -35,8 +35,8 @@ $(function(){
             // 这里把时间戳形态统一处理方便未来扩展
             // 格式：链接：空  锚文本：时间戳  标题：视频页链接,这个必须要有，这样的话时间戳才好被其他文档引用，对于被引用的时间戳打开形式可以用悬浮窗或者固定窗口来实现，这种情况一般也是辅助文本来使用，可能适用于学生考试党，或者一些视频教程
             // 在思源任何位置出现被点击先判断当前页是否存在iframe，存在则替换iframe链接播放
-            document.body.addEventListener('click', function(event) {
-                requestAnimationFrame(function() {
+            document.body.addEventListener('click',function(event) {
+                requestAnimationFrame(async function() {
                     // 判断当前节点是否是div，且具有contenteditable属性
                     var target = event.target;
     
@@ -52,8 +52,9 @@ $(function(){
     
                     if (target.tagName.toLowerCase() === 'span') {
                         var href = target.getAttribute('data-href');
+                        var dataType = target.getAttribute('data-type');
                         // 这里判断是不是时间戳链接  href:## 或者 ### 
-                        if(href == '##' || href == '###'){
+                        if((href == '##' || href == '###') && dataType == 'a'){
                             // 重置焦点
                             if (lastTarget && lastRange) {
                                 let sel = window.getSelection();
@@ -112,6 +113,58 @@ $(function(){
                                     }
                                 }
                             }
+                        }else if(dataType == 'a' && target.innerText == '>>'){
+                            var blockId = target.parentElement.parentElement.getAttribute("data-node-id")
+                            // 快进  5s一加
+                            // 获取父节点的第二个子节点
+                            var time = target.parentElement.firstChild.nextElementSibling.innerText;
+                            // 去除[]
+                            time = time.replace(/\[|\]/g, '');
+                            // 把时间戳转换成秒
+                            var seconds = parseTimeFromStr(time);
+                            // 增加2s
+                            var newTime = parseStrFromTime(seconds + 5);
+
+                            var blockMd = await invokeSiyuanApi("http://127.0.0.1:6806/api/block/getBlockKramdown",{
+                                "id": blockId
+                            });
+                            
+                            var newMd = cleanKramdown(blockMd.data.kramdown)
+                            console.log("blockMd is =>>>>>>>> " + newMd);
+                            // 找到newMd首次出现的[]，把里面的内容替换成newTime字段
+                            newMd = newMd.replace(`[[${time}]]`,`[[${newTime}]]`);
+                            // 更新当前block数据
+                            await invokeSiyuanApi("http://127.0.0.1:6806/api/block/updateBlock",{
+                                "data": newMd,
+                                "dataType": "markdown",
+                                "id": blockId
+                            });
+                        }else if(dataType == 'a' && target.innerText == '<<'){
+                            var blockId = target.parentElement.parentElement.getAttribute("data-node-id")
+                            // 快退 5s一减
+                            // 获取时间戳时间
+                            var time = target.parentElement.firstChild.nextElementSibling.innerText;
+                            // 去除[]
+                            time = time.replace(/\[|\]/g, '');
+                            // 把时间戳转换成秒
+                            var seconds = parseTimeFromStr(time);
+                            // 增加2s
+                            var newTime = parseStrFromTime(seconds - 5);
+
+                            var blockMd = await invokeSiyuanApi("http://127.0.0.1:6806/api/block/getBlockKramdown",{
+                                "id": blockId
+                            });
+                            
+                            var newMd = cleanKramdown(blockMd.data.kramdown)
+                            console.log("blockMd is =>>>>>>>> " + newMd);
+                            // 找到newMd首次出现的[]，把里面的内容替换成newTime字段
+                            newMd = newMd.replace(`[[${time}]]`,`[[${newTime}]]`);
+                            // 更新当前block数据
+                            await invokeSiyuanApi("http://127.0.0.1:6806/api/block/updateBlock",{
+                                "data": newMd,
+                                "dataType": "markdown",
+                                "id": blockId
+                            });
                         }
                     }
                 })
@@ -223,7 +276,7 @@ $(function(){
                         
                             // 这里调用一下思源插入内容快的接口
                             var result = await invokeSiyuanApi("http://127.0.0.1:6806/api/block/appendBlock", {
-                                data: `#### [[${currentTime}]](### "${videoUrl}")：`,
+                                data: `#### [<<]()[[${currentTime}]](### "${videoUrl}")[>>]()：`,
                                 dataType: "markdown",
                                 parentID: parentID,
                             });
@@ -309,7 +362,7 @@ $(function(){
 
                                 // 这里调用一下思源插入内容快的接口
                                 var result = await invokeSiyuanApi("http://127.0.0.1:6806/api/block/appendBlock", {
-                                    data: `#### [[${currentTime}]](## "${frameUrl}")：`,
+                                    data: `#### [<<]()[[${currentTime}]](## "${frameUrl}")[>>]()：`,
                                     dataType: "markdown",
                                     parentID: parentID,
                                 });
@@ -1066,7 +1119,7 @@ function insertVideoTime(){
                         var parentID = node.querySelectorAll(".sb")[1].getAttribute("data-node-id");
                         // 这里调用一下思源插入内容快的接口
                         var result = await invokeSiyuanApi("http://127.0.0.1:6806/api/block/appendBlock",{
-                            "data": `#### [[${response.currentTime}]](## "${frameUrl}")：`,
+                            "data": `#### [<<]()[[${response.currentTime}]](## "${frameUrl}")[>>]()：`,
                             "dataType": "markdown",
                             "parentID": parentID
                         });
@@ -1126,7 +1179,7 @@ function insertVideoTime(){
                             var parentID = node.querySelector(".protyle-background.protyle-background--enable").getAttribute("data-node-id");
                             // 这里调用一下思源插入内容快的接口
                             var result = await invokeSiyuanApi("http://127.0.0.1:6806/api/block/appendBlock",{
-                                "data": `#### [[${response.currentTime}]](### "${videoUrl}")：`,
+                                "data": `#### [<<]()[[${response.currentTime}]](### "${videoUrl}")[>>]()：`,
                                 "dataType": "markdown",
                                 "parentID": parentID
                             });

@@ -98,3 +98,81 @@ async function invokeSiyuanUploadApi(formData){
         console.error('There has been a problem with your invokeSiyuanApi operation:', error);
     }
 }
+
+function parseStrFromTime(currentTime){
+    var time = "00:00";
+    if (currentTime && currentTime !== "" && currentTime > 0) {
+        // 这里currentTime单位是秒，把它转换一下，小于60秒则直接显示秒，大于60秒则显示分钟:秒，大于60分钟，则显示小时:分钟:秒，且每个单位如果是个位数则前面补0
+        // 时间戳1分钟以内 直接用秒表示
+        if(currentTime < 10) {
+            // 小于10s  按00:0x
+            // 所有的秒只保留整数部分，即小数点后不显示
+            time = "00:0"+ parseInt(currentTime).toString();
+        }else if(currentTime < 60){
+            // 小于1分钟 按00:xx
+            time = "00:"+ parseInt(currentTime).toString();
+        }else if(currentTime < 60 * 60) {
+            // 小于1小时  按xx:yy
+            var min = parseInt(currentTime/60);
+            if(min < 10) {
+                time = "0"+min.toString()+":";
+            } else {
+                time = min.toString()+":";
+            }
+            var sec = currentTime%60;
+            if(sec < 10) {
+                time += "0"+parseInt(sec).toString();
+            } else {
+                time += parseInt(sec).toString();
+            }
+         }else {
+            var hour = parseInt(currentTime/3600);
+            if(hour < 10) {
+                time = "0"+hour.toString()+":";
+            } else {
+                time = hour.toString()+":";
+            }
+            var min = parseInt((currentTime%3600)/60);
+            if(min < 10) {
+                time += "0"+min.toString()+":";
+            } else {
+                time += min.toString()+":";
+            }
+            var sec = currentTime%60;
+            if(sec < 10) {
+                time += "0"+parseInt(sec).toString();
+            } else {
+                time += parseInt(sec).toString();
+            }
+         }
+    }
+
+    return time;
+}
+
+/**
+ * 时间戳字符串转换成秒数
+ * @param {*} timeStr 
+ * @returns 
+ */
+function parseTimeFromStr(timeStr){
+    var timeInSeconds = "";
+    if (timeStr && timeStr != '') {
+        // 这里判断下timeInSeconds的格式  如果是包含:的字符串，则转换为秒数
+        if (timeStr.indexOf(':') > -1) {
+            // 格式为xx:yy:zz，则转换为秒数
+            var time = timeStr.split(':');
+            // 如果是xx:yy则表示分钟:秒
+            // 如果是xx:yy:zz则表示小时:分钟:秒
+            if (time.length == 2) {
+                timeInSeconds = parseInt(time[0]) * 60 + parseInt(time[1]);
+            } else if (time.length == 3) {
+                timeInSeconds = parseInt(time[0]) * 60 * 60 + parseInt(time[1]) * 60 + parseInt(time[2]);
+            }
+        }else{
+            timeInSeconds = parseInt(timeInSeconds);
+        }
+    }
+
+    return timeInSeconds;
+}
