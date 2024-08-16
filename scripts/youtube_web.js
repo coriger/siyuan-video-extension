@@ -106,16 +106,51 @@ function injectYoutubePlaylistDownButton() {
         videoList.forEach(async function (item, index) {
             // 获取视频标题
             var videoTitle = item.getAttribute("title");
-            // 获取视频作者 /Video-视频库/" + author + "/" + title + "/" + (index+1) + videoTitle
-            var videoUrl = "https://www.youtube.com"+item.getAttribute("href").split("&")[0];
-            // 这里调用思源接口创建根目录
+            var duration = item.parentElement.parentElement.parentElement.querySelector(".badge-shape-wiz__text").innerHTML.trim();
+            // 获取
+            var videoUrl = "https://www.youtube.com/embed/"+item.getAttribute("href").split("&")[0].split("=")[1];
+
+
+            // 调用思源接口创建分片文件
             var json = {
-                notebook: notebook,
-                path: `/Video-视频库/${author}/${title}/${index+1}-${videoTitle}`,
-                markdown: `<span data-type="a" data-href="###">${videoUrl}</span>`,
-            };
+                "notebook": notebook,
+                "path": `/Video-视频库/${author}/${title}/${index+1}-${videoTitle}`,
+                "markdown":""
+            }
             // 调用思源创建文档api
-            await invokeSiyuanApi("http://127.0.0.1:6806/api/filetree/createDocWithMd", json);
+            var docRes = await invokeSiyuanApi("http://127.0.0.1:6806/api/filetree/createDocWithMd",json)
+            // 然后调用思源模版接口惊醒初始化操作
+            json = {
+                "id": docRes.data,
+                "path": pageTemplateUrl
+            }
+            var renderResult = await invokeSiyuanApi("http://127.0.0.1:6806/api/template/render",json)
+            // 拿到渲染后的markdown
+            var markdown = renderResult.data.content;
+            // 替换占位符  作者、时间、时长
+            markdown = markdown.replace(/{{VideoUrl}}/g,videoUrl)
+            markdown = markdown.replace(/{{Author}}/g,author)
+            markdown = markdown.replace(/{{Statue}}/g,"未读")
+            markdown = markdown.replace(/{{Duration}}/g,duration)
+
+            // 写入数据到思源中
+            json = {
+                "dataType": "dom",
+                "data": markdown,
+                "nextID": "",
+                "previousID": "",
+                "parentID": docRes.data
+            }
+            renderResult = await invokeSiyuanApi("http://127.0.0.1:6806/api/block/insertBlock",json)
+
+            // // 这里调用思源接口创建根目录
+            // var json = {
+            //     notebook: notebook,
+            //     path: `/Video-视频库/${author}/${title}/${index+1}-${videoTitle}`,
+            //     markdown: `<span data-type="a" data-href="###">${videoUrl}</span>`,
+            // };
+            // // 调用思源创建文档api
+            // await invokeSiyuanApi("http://127.0.0.1:6806/api/filetree/createDocWithMd", json);
         })
         // 移除下载按钮
         crxButton.remove();

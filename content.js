@@ -159,20 +159,6 @@ $(function(){
                 }
             }
 
-            // youtube  iframe视频跳转
-            if (request.action === "dumpFrameVideo" && currentPageUrl.indexOf('youtube.com/embed') != -1) {
-                if(document.URL == request.frameUrl){
-                    document.querySelector('video').currentTime = request.time;
-                    document.querySelector('video').play();
-                    // 可以发送响应消息
-                    sendResponse({result: "ok"});
-                    return true; // 保持消息通道打开直到sendResponse被调用
-                }else{
-                    document.querySelector('video').pause();
-                    return false;
-                }
-            }
-
             // 查询外部视频进度条
             if (request.action === "queryOuterVideo") {
                 // 判断当前页面的iframe地址是否和request.frameUrl相同
