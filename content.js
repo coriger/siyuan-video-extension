@@ -533,7 +533,7 @@ function injectBilibiliVideoDownButton(){
         crxButton.addEventListener('click', async function() {
             console.log('下载选集！');
             // 获取视频标题
-            var title = document.querySelector(".video-title.special-text-indent").innerText;
+            var title = document.querySelector(".video-title.special-text-indent").innerText.replace("/","");
             var author = document.querySelector('meta[itemprop="author"]').getAttribute('content').trim();
 ;
             // 这里调用思源接口创建根目录
@@ -602,7 +602,7 @@ function injectBilibiliVideoDownButton(){
         crxButton.addEventListener('click', async function() {
             console.log('下载单视频！');
             // 获取视频标题
-            var title = document.querySelector(".video-title.special-text-indent").innerText;
+            var title = document.querySelector(".video-title.special-text-indent").innerText.replace("/","");
             var author = document.querySelector('meta[itemprop="author"]').getAttribute('content').trim();
             var duration = document.querySelector(".bpx-player-ctrl-time-duration").innerText;
             // 这里调用思源接口创建根目录
@@ -630,8 +630,8 @@ function injectBilibiliVideoDownButton(){
             markdown = markdown.replace(/{{VideoUrl}}/g,videoUrl)
             markdown = markdown.replace(/{{Author}}/g,author)
             markdown = markdown.replace(/{{Statue}}/g,"未读")
-            markdown = markdown.replace(/{{Duration}}/g,duration)            
-            
+            markdown = markdown.replace(/{{Duration}}/g,duration)
+
             // 写入数据到思源中
             json = {
                 "dataType": "dom",
@@ -682,7 +682,7 @@ function injectBilibiliZhengPianButton(episodes){
         crxButton.addEventListener('click', async function() {
             console.log('下载正片！');
             // 获取视频标题
-            var title = crxButton.textContent;
+            var title = crxButton.textContent.replace("/","");
             var author = document.querySelector('meta[property="og:title"]').getAttribute('content').trim();
             // 这里调用思源接口创建根目录
             var json = {
@@ -806,7 +806,7 @@ function injectBilibiliHeJiButton(ugc_season){
         crxButton.addEventListener('click', async function() {
             console.log('下载合集！');
             // 获取视频标题
-            var title = ugc_season.title;
+            var title = ugc_season.title.replace("/","");
             var author = document.querySelector('meta[itemprop="author"]').getAttribute('content').trim();
             // 这里调用思源接口创建根目录
             var json = {

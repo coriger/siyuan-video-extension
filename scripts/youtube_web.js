@@ -46,7 +46,7 @@ function injectYoutubeVideoDownButton() {
     crxButton.addEventListener("click", async function () {
         console.log("下载单视频！");
         // 获取视频标题
-        var title = document.title.trim();
+        var title = document.title.trim().replace("/","");
         var author = document.querySelector('.style-scope.ytd-channel-name.complex-string').getAttribute("title").trim();
         var currentPageUrl = document.URL;
         // 这里调用思源接口创建根目录
@@ -98,7 +98,7 @@ function injectYoutubePlaylistDownButton() {
     crxButton.addEventListener("click", async function () {
         console.log("下载列表");
         // 获取视频标题
-        var title = document.title.trim();
+        var title = document.title.trim().replace("/","");
         var author = document.querySelector(".metadata-action-bar.style-scope.ytd-playlist-header-renderer").querySelector(".yt-simple-endpoint.style-scope.yt-formatted-string").innerHTML.trim();
         // 获取视频了表
         var videoList = document.querySelectorAll(".yt-simple-endpoint.style-scope.ytd-playlist-video-renderer");
