@@ -586,6 +586,8 @@ function injectBilibiliVideoDownButton(){
                 }
                 renderResult = await invokeSiyuanApi("http://127.0.0.1:6806/api/block/insertBlock",json)
             })
+            // 移除下载按钮
+            crxContainer.remove();
         });
     }else if(heji){
         // 合集跳过不处理 通过接口劫持注入
@@ -639,6 +641,8 @@ function injectBilibiliVideoDownButton(){
                 "parentID": docRes.data
             }
             renderResult = await invokeSiyuanApi("http://127.0.0.1:6806/api/block/insertBlock",json)
+            // 移除下载按钮
+            crxContainer.remove();
         });
     }
 }
@@ -728,6 +732,8 @@ function injectBilibiliZhengPianButton(episodes){
                 }
                 renderResult = await invokeSiyuanApi("http://127.0.0.1:6806/api/block/insertBlock",json)
             })
+            // 移除下载按钮
+            crxContainer.remove();
         });
 }
 
@@ -861,6 +867,8 @@ function injectBilibiliHeJiButton(ugc_season){
                     renderResult = await invokeSiyuanApi("http://127.0.0.1:6806/api/block/insertBlock",json)
                 })
              })
+            // 移除按钮
+            crxContainer.remove();
         });
 }
 
