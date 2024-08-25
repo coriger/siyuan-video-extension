@@ -48,15 +48,41 @@ function injectYoutubeVideoDownButton() {
         // 获取视频标题
         var title = document.title.trim().replace("/","");
         var author = document.querySelector('.style-scope.ytd-channel-name.complex-string').getAttribute("title").trim();
-        var currentPageUrl = document.URL;
-        // 这里调用思源接口创建根目录
+        var duration = document.querySelector(".ytp-time-duration").innerHTML.trim();
+        // <link itemprop="embedUrl" href="https://www.youtube.com/embed/AyV954yKRSw">
+        var videoUrl = document.querySelector('link[itemprop="embedUrl"]').getAttribute('href');
+        // 调用思源接口创建分片文件
         var json = {
-            notebook: notebook,
-            path: "/Video-视频库/" + author + "/" + title,
-            markdown: `<span data-type="a" data-href="###">${currentPageUrl}</span>`,
-        };
+            "notebook": notebook,
+            "path": `/Video-视频库/${author}/${title}`,
+            "markdown":""
+        }
         // 调用思源创建文档api
-        await invokeSiyuanApi("http://127.0.0.1:6806/api/filetree/createDocWithMd", json);
+        var docRes = await invokeSiyuanApi("http://127.0.0.1:6806/api/filetree/createDocWithMd",json)
+        // 然后调用思源模版接口惊醒初始化操作
+        json = {
+            "id": docRes.data,
+            "path": pageTemplateUrl
+        }
+        var renderResult = await invokeSiyuanApi("http://127.0.0.1:6806/api/template/render",json)
+        // 拿到渲染后的markdown
+        var markdown = renderResult.data.content;
+        // 替换占位符  作者、时间、时长
+        markdown = markdown.replace(/{{VideoUrl}}/g,videoUrl)
+        markdown = markdown.replace(/{{Author}}/g,author)
+        markdown = markdown.replace(/{{Statue}}/g,"未读")
+        markdown = markdown.replace(/{{Duration}}/g,duration)
+
+        // 写入数据到思源中
+        json = {
+            "dataType": "dom",
+            "data": markdown,
+            "nextID": "",
+            "previousID": "",
+            "parentID": docRes.data
+        }
+        renderResult = await invokeSiyuanApi("http://127.0.0.1:6806/api/block/insertBlock",json)
+        
         // 移除下载按钮
         crxButton.remove();
     });
@@ -142,15 +168,6 @@ function injectYoutubePlaylistDownButton() {
                 "parentID": docRes.data
             }
             renderResult = await invokeSiyuanApi("http://127.0.0.1:6806/api/block/insertBlock",json)
-
-            // // 这里调用思源接口创建根目录
-            // var json = {
-            //     notebook: notebook,
-            //     path: `/Video-视频库/${author}/${title}/${index+1}-${videoTitle}`,
-            //     markdown: `<span data-type="a" data-href="###">${videoUrl}</span>`,
-            // };
-            // // 调用思源创建文档api
-            // await invokeSiyuanApi("http://127.0.0.1:6806/api/filetree/createDocWithMd", json);
         })
         // 移除下载按钮
         crxButton.remove();
