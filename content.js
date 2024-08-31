@@ -86,10 +86,12 @@ $(function(){
                                             }
                                         }
         
-                                        // 每次点击时间戳 都要把当前页面iframe固定住
-                                        node.querySelectorAll(".iframe-content")[0].style.position = "fixed";
-                                        // 移除iframe的宽度width
-                                        node.querySelectorAll("iframe")[0].style.removeProperty("width");
+                                        var position = node.querySelectorAll(".iframe-content")[0].style.position;
+                                        if(position != "fixed"){
+                                            node.querySelectorAll(".iframe-content")[0].style.position = "fixed";
+                                            // iframe-content的width要和.protyle-wysiwyg.iframe中的width保持一致
+                                            // node.querySelectorAll("iframe")[0].style.removeProperty("width");
+                                        }
         
                                         var frameUrl = node.querySelectorAll("iframe")[0].getAttribute("src")
                                         // 跳转当前内嵌页面视频进度
@@ -1015,9 +1017,12 @@ function screenVideoTime(){
             if(iframe){
                 // 每次点击时间戳 都要把当前页面iframe固定住
                 // .iframe-content样式中 position:relative;
-                node.querySelectorAll(".iframe-content")[0].style.position = "fixed";
-                // iframe-content的width要和.protyle-wysiwyg.iframe中的width保持一致
-                node.querySelectorAll("iframe")[0].style.removeProperty("width");
+                var position = node.querySelectorAll(".iframe-content")[0].style.position;
+                if(position != "fixed"){
+                    node.querySelectorAll(".iframe-content")[0].style.position = "fixed";
+                    // iframe-content的width要和.protyle-wysiwyg.iframe中的width保持一致
+                    // node.querySelectorAll("iframe")[0].style.removeProperty("width");
+                }
 
                 // 先找到对应的iframe  通知backgroud.js转发截图请求
                 var frameUrl = node.querySelectorAll("iframe")[0].getAttribute("src")
@@ -1060,9 +1065,13 @@ function insertVideoTime(){
             if(iframe){
                 // 每次点击时间戳 都要把当前页面iframe固定住
                 // .iframe-content样式中 position:relative;
-                node.querySelectorAll(".iframe-content")[0].style.position = "fixed";
-                // iframe-content的width要和.protyle-wysiwyg.iframe中的width保持一致
-                node.querySelectorAll("iframe")[0].style.removeProperty("width");
+                // 这里先判断下是不是已经是固定模式了
+                var position = node.querySelectorAll(".iframe-content")[0].style.position;
+                if(position != "fixed"){
+                    node.querySelectorAll(".iframe-content")[0].style.position = "fixed";
+                    // iframe-content的width要和.protyle-wysiwyg.iframe中的width保持一致
+                    // node.querySelectorAll("iframe")[0].style.removeProperty("width");
+                }
 
                 var frameUrl = node.querySelectorAll("iframe")[0].getAttribute("src");
                 // 发送消息到background.js获取iframe视频时间
