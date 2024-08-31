@@ -73,8 +73,10 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
                 // 这里直接调用思源上传接口
                 var uploadResult = await invokeSiyuanUploadApi(formData);
                 // 获取上传后的图片路径  screenshot.png这个是一个整体
-                // {"code":0,"msg":"","data":{"errFiles":null,"succMap":{"screenshot.png":"assets/screenshot-20240812122103-liwlec4.png"}}}
-                var imgUrl = uploadResult.data.succMap["screenshot.png"];
+                // {"code":0,"msg":"","data":{"errFiles":null,"succMap":{"screenshot-20240831152040-09diac9.png":"assets/screenshot-20240812122103-liwlec4.png"}}}
+                // 解析JSON字符串为JavaScript对象
+                var imgUrl = Object.values(uploadResult.data.succMap);
+                console.log("截图地址:" + imgUrl);
                 if (imgUrl) {
                     var currentTime = parseVideoTimeFromDuration(document.querySelector("video").currentTime * 1000);
                     // 这里通过backgroud.js把截图和时间戳转发到content.js
