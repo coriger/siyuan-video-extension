@@ -429,7 +429,8 @@ $(function(){
                     var uploadResult = await invokeSiyuanUploadApi(formData);
                     // 获取上传后的图片路径  screenshot.png这个是一个整体
                     // {"code":0,"msg":"","data":{"errFiles":null,"succMap":{"screenshot.png":"assets/screenshot-20240812122103-liwlec4.png"}}}
-                    var imgUrl = uploadResult.data.succMap['screenshot.png'];
+                    // var imgUrl = uploadResult.data.succMap['screenshot.png'];
+                    var imgUrl = Object.values(uploadResult.data.succMap);
                     if(imgUrl){
                         var currentTime = parseVideoTimeFromDuration(document.querySelector('video').currentTime*1000);
                         // 这里通过backgroud.js把截图和时间戳转发到content.js
