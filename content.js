@@ -911,20 +911,20 @@ function injectVideoJumpButton(){
 
             // 模版插入
             const insert1Div = document.createElement('div');
-            insert1Div.innerHTML = `<div data-menu="true" id="extension-video-insert1" class="toolbar__item ariaLabel" aria-label="默认时间戳" data-position="right">🐞</div>`;
+            insert1Div.innerHTML = `<div data-menu="true" id="extension-video-insert1" class="toolbar__item ariaLabel" aria-label="默认时间戳[CTRL+1]" data-position="right">🐞</div>`;
 
             // 自由插入
             const insert2Div = document.createElement('div');
-            insert2Div.innerHTML = `<div data-menu="true" id="extension-video-insert2" class="toolbar__item ariaLabel" aria-label="自由时间戳" data-position="right">🐸</div>`;
+            insert2Div.innerHTML = `<div data-menu="true" id="extension-video-insert2" class="toolbar__item ariaLabel" aria-label="自由时间戳[CTRL+3]" data-position="right">🐸</div>`;
             
             const resetDiv = document.createElement('div');
-            resetDiv.innerHTML = `<div data-menu="true" id="extension-video-reset" class="toolbar__item ariaLabel" aria-label="还原窗口" data-position="right">🪲</div>`;
+            resetDiv.innerHTML = `<div data-menu="true" id="extension-video-reset" class="toolbar__item ariaLabel" aria-label="还原窗口[CTRL+5]" data-position="right">🪲</div>`;
 
             const screen1Div = document.createElement('div');
-            screen1Div.innerHTML = `<div data-menu="true" id="extension-video-screen1" class="toolbar__item ariaLabel" aria-label="默认截图" data-position="right">🐷</div>`;
+            screen1Div.innerHTML = `<div data-menu="true" id="extension-video-screen1" class="toolbar__item ariaLabel" aria-label="默认截图[CTRL+2]" data-position="right">🐷</div>`;
 
             const screen2Div = document.createElement('div');
-            screen2Div.innerHTML = `<div data-menu="true" id="extension-video-screen2" class="toolbar__item ariaLabel" aria-label="自由截图" data-position="right">🐯</div>`;
+            screen2Div.innerHTML = `<div data-menu="true" id="extension-video-screen2" class="toolbar__item ariaLabel" aria-label="自由截图[CTRL+4]" data-position="right">🐯</div>`;
 
             // 获取#toolbarVIP元素
             const toolbarVIP = document.getElementById('toolbarVIP');
