@@ -11,6 +11,30 @@ $(function(){
         if(currentPageUrl.indexOf('/stage/build/desktop') != -1){
             // 思源页面  注入时间戳按钮
             injectVideoJumpButton()
+            // 绑定快捷键
+            document.addEventListener('keydown', (event) => {
+                if (event.ctrlKey && event.key === '1') {
+                    event.preventDefault(); // 阻止默认行为
+                    var insert1Btn = document.getElementById('extension-video-insert1');
+                    insert1Btn.click();
+                }else if (event.ctrlKey && event.key === '2') {
+                    event.preventDefault(); // 阻止默认行为
+                    var screen1Btn = document.getElementById('extension-video-screen1');
+                    screen1Btn.click();
+                }else if (event.ctrlKey && event.key === '3') {
+                    event.preventDefault(); // 阻止默认行为
+                    var insert2Btn = document.getElementById('extension-video-insert2');
+                    insert2Btn.click();
+                }else if (event.ctrlKey && event.key === '4') {
+                    event.preventDefault(); // 阻止默认行为
+                    var screen2Btn = document.getElementById('extension-video-screen2');
+                    screen2Btn.click();
+                }else if (event.ctrlKey && event.key === '5') {
+                    event.preventDefault(); // 阻止默认行为
+                    var resetBtn = document.getElementById('extension-video-reset');
+                    resetBtn.click();
+                }
+            });
             // 监听鼠标事件
             document.body.addEventListener('mouseup', function(event) {
                 var target = event.target;
