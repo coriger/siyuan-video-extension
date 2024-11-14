@@ -125,8 +125,8 @@ function injectYoutubePlaylistDownButton() {
         console.log("下载列表");
         // 获取视频标题
         var title = document.title.trim().replace("/","");
-        var author = document.querySelector(".metadata-action-bar.style-scope.ytd-playlist-header-renderer").querySelector(".yt-simple-endpoint.style-scope.yt-formatted-string").innerHTML.trim();
-        // 获取视频了表
+        var author = document.querySelector(".yt-core-attributed-string__link.yt-core-attributed-string__link--call-to-action-color.yt-core-attributed-string--link-inherit-color").innerHTML.trim().replace("创建者：","");
+        // 获取视频列表
         var videoList = document.querySelectorAll(".yt-simple-endpoint.style-scope.ytd-playlist-video-renderer");
         // 遍历视频列表
         videoList.forEach(async function (item, index) {
