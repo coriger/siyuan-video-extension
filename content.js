@@ -502,7 +502,7 @@ $(function(){
             if (request.action === "injectBilibiliHeJiButton" && currentPageUrl.indexOf('bilibili.com/video') != -1) {
                 console.log(request.data.data.View.ugc_season)
                 // 订阅合集节点  .second-line_right 独有
-                var heji = document.querySelector(".second-line_right");
+                var heji = document.querySelector(".subscribe-btn");
                 if(heji){
                     // 先移除老的下载按钮
                     document.querySelectorAll("#CRX-container").forEach(function (item) {
@@ -548,7 +548,7 @@ function injectBilibiliVideoDownButton(){
     // 视频选集节点   .head-left 独有
     var xuanji = document.querySelector(".head-left");
     // 订阅合集节点  .second-line_right 独有
-    var heji = document.querySelector(".second-line_right");
+    var heji = document.querySelector(".subscribe-btn");
     if(xuanji){
         // 选集页面
         crxButton.textContent = '下载选集';
@@ -566,7 +566,7 @@ function injectBilibiliVideoDownButton(){
             // 这里调用思源接口创建根目录
             var json = {
                 "notebook": notebook,
-                "path": "/"+title,
+                "path": "/Video-视频库/"+title,
                 "markdown":""
             }
             // 调用思源创建文档api
@@ -584,7 +584,7 @@ function injectBilibiliVideoDownButton(){
                 // 调用思源接口创建分片文件
                 var json = {
                     "notebook": notebook,
-                    "path": "/"+title+"/"+page+"-"+videoTitle,
+                    "path": "/Video-视频库/"+title+"/"+page+"-"+videoTitle,
                     "markdown":""
                 }
                 // 调用思源创建文档api
@@ -714,7 +714,7 @@ function injectBilibiliZhengPianButton(episodes){
             // 这里调用思源接口创建根目录
             var json = {
                 "notebook": notebook,
-                "path": "/"+title,
+                "path": "/Video-视频库/"+title,
                 "markdown":""
             }
             // 调用思源创建文档api
@@ -731,7 +731,7 @@ function injectBilibiliZhengPianButton(episodes){
                 // 调用思源接口创建分片文件
                 json = {
                     "notebook": notebook,
-                    "path": "/"+title+"/"+(index+1)+"-"+videoTitle,
+                    "path": "/Video-视频库/"+title+"/"+(index+1)+"-"+videoTitle,
                     "markdown":""
                 }
                 // 调用思源创建文档api
@@ -838,7 +838,7 @@ function injectBilibiliHeJiButton(ugc_season){
             // 这里调用思源接口创建根目录
             var json = {
                 "notebook": notebook,
-                "path": "/"+title,
+                "path": "/Video-视频库/"+title,
                 "markdown":""
             }
             // 调用思源创建文档api
@@ -851,7 +851,7 @@ function injectBilibiliHeJiButton(ugc_season){
                 // 这里调用思源接口创建根目录
                 json = {
                     "notebook": notebook,
-                    "path": "/"+title+"/"+(secIndex+1)+"-"+secTitle,
+                    "path": "/Video-视频库/"+title+"/"+(secIndex+1)+"-"+secTitle,
                     "markdown":""
                 }
                 // 调用思源创建文档api
@@ -865,7 +865,7 @@ function injectBilibiliHeJiButton(ugc_season){
                     // 这里调用思源接口创建根目录
                     json = {
                         "notebook": notebook,
-                        "path": "/"+title+"/"+(secIndex+1)+"-"+secTitle+"/"+(index+1)+"-"+videoTitle,
+                        "path": "/Video-视频库/"+title+"/"+(secIndex+1)+"-"+secTitle+"/"+(index+1)+"-"+videoTitle,
                         "markdown":""
                     }
                     // 调用思源创建文档api
