@@ -1,60 +1,29 @@
 {
-  "name": "siyuan-video-extension",
-  "description": "Siyuan Video Notes Extension",
-  "version": "0.1.7",
-  "manifest_version": 2,
-  "browser_action": {
-    "default_icon": {
-      "16": "icon.png",
-      "48": "icon.png",
-      "128": "icon.png"
-    }
+  "name": "思源笔记：视频笔记插件",
+  "version": "0.2.0",
+  "manifest_version": 3,
+  "description": "思源笔记：视频笔记插件，支持B站、Youtube、百度网盘做视频笔记",
+  "icons": {
+    "500": "icon.png"
   },
-  "background": {
-    "scripts": ["background.js"],
-    "persistent": true
+  "action": {
+    "default_popup": "options.html"
+  },
+  "options_ui": {
+    "page": "options.html"
   },
   "permissions": [
-    "http://*/*",
-    "https://*/*",
-    "activeTab",
-    "alarms",
-    "bookmarks",
-    "clipboardRead",
-    "clipboardWrite",
-    "contextMenus",
-    "cookies",
-    "declarativeContent",
-    "debugger",
-    "geolocation",
-    "history",
-    "idle",
-    "management",
-    "notifications",
-    "pageCapture",
-    "printerProvider",
-    "privacy",
-    "proxy",
-    "sessions",
     "storage",
     "tabs",
-    "tabCapture",
-    "topSites",
-    "webNavigation",
-    "webRequest",
-    "webRequestBlocking",
-    "unlimitedStorage",
-    "system.display",
-    "system.storage",
-    "system.cpu",
-    "system.memory",
-    "<all_urls>"
+    "webRequest"
   ],
+  "background": {
+    "service_worker": "background.js"
+  },
   "content_scripts": [
     {
-      "matches": ["<all_urls>"],
-      "js": ["zepto.min.js","common.js","scripts/baidu_disk.js","scripts/bilibili_iframe.js","scripts/bilibili_web.js","scripts/youtube_embed.js","scripts/youtube_web.js","scripts/siyuan.js","content.js"],
-      "run_at": "document_end",
+      "matches": ["*://*.bilibili.com/*","*://*/stage/build/desktop/*","*://*.youtube.com/*","*://pan.baidu.com/*"],
+      "js": ["zepto.min.js", "common.js", "scripts/baidu_disk.js", "scripts/bilibili_iframe.js", "scripts/bilibili_web.js", "scripts/youtube_embed.js", "scripts/youtube_web.js", "scripts/siyuan.js", "content.js"],
       "all_frames": true
     }
   ]

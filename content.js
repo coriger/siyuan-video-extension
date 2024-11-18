@@ -209,10 +209,10 @@ $(function(){
 
         // 跨域通信  监听来自background的消息
         chrome.runtime.onMessage.addListener(async function(request, sender, sendResponse) {
-            console.log("onMessage request action is " + request.action);
-            console.log("onMessage current page is " + currentPageUrl);
             
             if (request.action === "noticMsg") {
+                console.log("onMessage request action is " + request.action);
+                console.log("onMessage current page is " + currentPageUrl);
                 await invokeSiyuanApi("http://127.0.0.1:6806/api/notification/pushMsg",{
                     "msg": request.msg,
                     "timeout": 3000
@@ -222,6 +222,8 @@ $(function(){
 
             // 外部视频跳转
             if (request.action === "dumpOuterVideo") {
+                console.log("onMessage request action is " + request.action);
+                console.log("onMessage current page is " + currentPageUrl);
                 // 这里还需要判断一下视频详情页地址是否和当前页面匹配
                 if(document.URL == request.videoUrl){
                     document.querySelector('video').currentTime = request.time;
@@ -240,6 +242,8 @@ $(function(){
 
             // 查询外部视频进度条
             if (request.action === "queryOuterVideo") {
+                console.log("onMessage request action is " + request.action);
+                console.log("onMessage current page is " + currentPageUrl);
                 // 判断当前页面的iframe地址是否和request.frameUrl相同
                 if(document.URL == request.videoUrl){
                     sendResponse({time: document.querySelector('video').currentTime})
@@ -250,6 +254,8 @@ $(function(){
 
             // 外部视频写入截图
             if (request.action === "screenOuterInsert" && currentPageUrl.indexOf("/stage/build/desktop") != -1) {
+                console.log("onMessage request action is " + request.action);
+                console.log("onMessage current page is " + currentPageUrl);
                 // 拿到数据直接写入思源
                 var currentTime = request.currentTime;
                 var imgUrl = request.imgUrl;
@@ -334,6 +340,8 @@ $(function(){
 
             // 写入截图  iframe写入
             if (request.action === "screenInsert" && currentPageUrl.indexOf("/stage/build/desktop") != -1) {
+                console.log("onMessage request action is " + request.action);
+                console.log("onMessage current page is " + currentPageUrl);
                 // 拿到数据直接写入思源
                 var currentTime = request.currentTime;
                 var imgUrl = request.imgUrl;
@@ -420,6 +428,8 @@ $(function(){
 
             // 外部视频截图指令
             if (request.action === "screenshotOuterVideo") {
+                console.log("onMessage request action is " + request.action);
+                console.log("onMessage current page is " + currentPageUrl);
                 // 判断当前页面的iframe地址是否和request.frameUrl相同
                 if(document.URL == request.videoUrl){
                     // 截图
@@ -485,6 +495,9 @@ $(function(){
 
             // bilibili 正片页面 注入下载按钮
             if (request.action === "injectBilibiliZhengPianButton" && currentPageUrl.indexOf('bilibili.com/bangumi/play') != -1) {
+                console.log("onMessage request action is " + request.action);
+                console.log("onMessage current page is " + currentPageUrl);
+
                 console.log(request.data.result.episodes)
                 if(true){
                     // 先移除老的下载按钮
@@ -500,6 +513,9 @@ $(function(){
 
             // bilibili 合集页面 注入下载按钮
             if (request.action === "injectBilibiliHeJiButton" && currentPageUrl.indexOf('bilibili.com/video') != -1) {
+                console.log("onMessage request action is " + request.action);
+                console.log("onMessage current page is " + currentPageUrl);
+                
                 console.log(request.data.data.View.ugc_season)
                 // 订阅合集节点  .second-line_right 独有
                 var heji = document.querySelector(".subscribe-btn");

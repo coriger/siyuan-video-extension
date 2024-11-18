@@ -1,7 +1,51 @@
 var currentPageUrl;
-const pageTemplateUrl = "F:\\思源笔记\\data\\templates\\视频笔记模版.md"
-const Authorization = "token 4si8l21oy72gng6e"
-const notebook = "20240113225127-jsmsoov"
+var Authorization;
+var notebook;
+var pageTemplateUrl;
+
+// 定义要从存储中检索的键
+const keys = ['token', 'notebook', 'pageTemplateUrl'];
+
+// 初始化函数，从存储中加载值
+function initializeParams() {
+    getValuesFromStorage(keys, function(result) {
+        updateParams(result);
+    });
+}
+
+// 更新参数值
+function updateParams(values) {
+    Authorization = values.token;
+    notebook = values.notebook; 
+    pageTemplateUrl = values.pageTemplateUrl;
+
+    console.log('Authorization:', Authorization);
+    console.log('notebook:', notebook);
+    console.log('pageTemplateUrl:', pageTemplateUrl);
+}
+
+// 从存储中获取值的函数
+function getValuesFromStorage(keys, callback) {
+    chrome.storage.local.get(keys, function(result) {
+        callback(result);
+    });
+}
+
+// 监听存储变化，更新参数值
+chrome.storage.onChanged.addListener(function(changes, namespace) {
+    var changedValues = {};
+    keys.forEach(function(key) {
+        if (changes[key]) {
+            changedValues[key] = changes[key].newValue;
+        }
+    });
+    if (Object.keys(changedValues).length > 0) {
+        updateParams(changedValues);
+    }
+});
+
+// 调用初始化函数，加载初始值
+initializeParams();
 
 /**
  * 把视频时长转换成字符串格式 
@@ -51,7 +95,7 @@ async function invokeSiyuanApi(url,json){
         const response = await fetch(url, {
             method: "POST",
             headers: {
-                "Authorization": Authorization,
+                "Authorization": "token "+Authorization,
                 "Content-Type": "application/json",
             },
             body: JSON.stringify(json)
@@ -82,7 +126,7 @@ async function invokeSiyuanUploadApi(formData){
         const response = await fetch("http://127.0.0.1:6806/api/asset/upload", {
             method: "POST",
             headers: {
-                "Authorization": Authorization,
+                "Authorization": "token "+Authorization,
             },
             body: formData
         });

@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>思源笔记：视频笔记插件配置</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      width: 400px; /* 增加宽度 */
+    }
+    h1 {
+      color: #333;
+    }
+    form {
+        max-width: 400px;
+        padding: 10px;
+    }
+    label {
+      display: block;
+      margin-bottom: 10px;
+      font-size: 16px;
+    }
+    input[type="text"] {
+      width: 90%;
+      padding: 10px;
+      margin-bottom: 10px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+    button {
+      background-color: #4CAF50;
+      color: white;
+      padding: 10px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      display: block; 
+      margin: auto;
+    }
+    button:hover {
+      background-color: #45a049;
+    }
+
+      /* 选择器美化 */
+    select#notebook {
+        width: 364px; /* 设置下拉列表的宽度 */
+        padding: 10px; /* 设置内边距 */
+        font-size: 16px; /* 设置字体大小 */
+        border: 1px solid #ccc; /* 设置边框 */
+        border-radius: 5px; /* 设置边框圆角 */
+        background-color: #fff; /* 设置背景颜色 */
+        color: #333; /* 设置字体颜色 */
+        -webkit-appearance: none; /* 移除默认的外观样式（针对WebKit浏览器） */
+        -moz-appearance: none; /* 移除默认的外观样式（针对Mozilla浏览器） */
+        appearance: none; /* 移除默认的外观样式 */
+        margin-bottom: 10px;
+    }
+
+    /* 下拉箭头的美化（可选，仅针对WebKit浏览器如Chrome和Safari） */
+    select#notebook::-ms-expand {
+        display: none; /* 移除IE的下拉箭头 */
+    }
+    
+    select#notebook::-webkit-scrollbar {
+        display: none; /* 尝试隐藏WebKit的滚动条（可能不起作用） */
+    }
+    
+    /* 如果你想完全自定义下拉箭头，你可能需要使用伪元素和额外的HTML标记 */
+
+    /* 焦点状态下的样式 */
+    select#notebook:focus {
+        border-color: #007bff; /* 设置边框颜色为蓝色 */
+        outline: 0; /* 移除默认的轮廓线 */
+        box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25); /* 添加蓝色的阴影效果 */
+    }
+    
+    /* 选项的悬停样式 */
+    select#notebook option:hover {
+        background-color: #e9ecef; /* 设置选项悬停时的背景颜色 */
+    }
+  </style>
+</head>
+<body>
+  <form id="config-form">
+      
+        <label for="token">Token:</label>
+        <input type="text" id="token" name="token" required>
+
+        <label for="notebook">笔记本:</label>
+        <select id="notebook" name="notebook" required>
+          <option value="">请选择笔记本</option>
+        </select>
+
+        <label for="pageTemplateUrl">模板文件路径:</label>
+        <input type="text" id="pageTemplateUrl" name="pageTemplateUrl" required>
+
+        <button type="submit">保存配置</button>
+    </form>
+  <script src="options.js"></script>
+</body>
+</html>

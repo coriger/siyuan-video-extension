@@ -8,6 +8,7 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
         chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
             // 发送消息到iframe中的content脚本
             chrome.tabs.sendMessage(tabs[0].id, {action: "queryIframeVideo",frameUrl:request.frameUrl},function(response){
+                console.log("queryInnerIframe:"+response);
                 // 返回当前时间戳
                 sendResponse({currentTime:parseStrFromTime(response.time)}); // 发送
             });
@@ -345,7 +346,7 @@ chrome.webRequest.onCompleted.addListener(function (details) {
         });
     }
 
-}, {urls: ["https://pan.baidu.com/*"]});
+}, {urls: ["*://pan.baidu.com/*"]});
 
 
 
