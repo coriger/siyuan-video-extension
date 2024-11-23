@@ -1,6 +1,6 @@
 # 思源笔记：视频笔记插件
 
-##### 1、Chrome商店搜索[思源笔记：视频笔记插件](https://chromewebstore.google.com/detail/%E6%80%9D%E6%BA%90%E7%AC%94%E8%AE%B0%EF%BC%9A%E8%A7%86%E9%A2%91%E7%AC%94%E8%AE%B0%E6%8F%92%E4%BB%B6/ggggnakoippfjjggdgadahifiankomni)安装，无法打开Chrome商店，请在[Release](https://github.com/siyuan-note/video-notes/releases)页下载最新版本手动安装
+##### 1、Chrome商店搜索[思源笔记：视频笔记插件](https://chromewebstore.google.com/detail/%E6%80%9D%E6%BA%90%E7%AC%94%E8%AE%B0%EF%BC%9A%E8%A7%86%E9%A2%91%E7%AC%94%E8%AE%B0%E6%8F%92%E4%BB%B6/ggggnakoippfjjggdgadahifiankomni)安装，无法打开Chrome商店，请在[Release](https://github.com/coriger/siyuan-video-extension/releases)页下载最新版本手动安装
 
 ##### 2、初次使用，先进行模版安装和参数配置
 
