@@ -204,6 +204,134 @@ $(function(){
         }else if(currentPageUrl.indexOf('youtube.com/playlist') != -1){
             // 列表页面下载按钮
             injectYoutubePlaylistDownButton()
+        }else if(currentPageUrl.indexOf('plugins/siyuan-blog') != -1){  // 思源分享插件页面
+            // 等待页面出现iframe节点
+            var observer = new MutationObserver(function (mutations) {
+                if(document.querySelectorAll("iframe").length > 0){
+                    // 移除监听
+                    observer.disconnect();
+
+                    // 找到所有data-type=NodeBlockquote的节点，从里面找data-type为NodeParagraph的节点，再从里面找contenteditable=false的节点的innerText的值是否为空，如果为空，则移除当前NodeBlockquote节点
+                    document.querySelectorAll("[data-type=NodeBlockquote]").forEach(function (node) {
+                        // 查询所有的NodeParagraph节点
+                        var isEmpty = true;
+                        node.querySelectorAll("[data-type=NodeParagraph]").forEach(function (pnode) {
+                            var contentEditableFalse = pnode.querySelector('[contenteditable="false"]');
+                            if(contentEditableFalse && contentEditableFalse.innerText){
+                                isEmpty = false;
+                            }
+
+                            if(contentEditableFalse && !contentEditableFalse.innerText){
+                                pnode.remove();
+                            }
+                        })
+
+                        if(isEmpty){
+                            node.remove();
+                        }
+                    })
+
+                    // 处理一下iframe样式
+                    // 移除.iframe-content的display属性 把position改为fixed
+                    document.querySelectorAll(".iframe-content").forEach(function (node) {
+                        node.style.display = "block";
+                        node.style.position = "fixed";
+                    })
+
+                    // 找到页面的iframe，移除style中的pointer-events属性
+                    document.querySelectorAll("iframe").forEach(function (node) {
+                        node.style.pointerEvents = "auto";
+                    })
+                    
+                    // 找到data-type=NodeHeading里的孙子节点a标签，如果innerText为<< >> 则移除a标签
+                    document.querySelectorAll("[data-type=NodeHeading]").forEach(function (node) {
+                        // 查询所有的span节点
+                        node.querySelectorAll("span").forEach(function (span) {
+                            console.log(span);
+                            if(span.innerText == ">>" || span.innerText == "<<"){
+                                span.remove();
+                            }
+                        })
+                    })
+
+                    // 点击事件监听 
+                    document.body.addEventListener('click',function(event) {
+                        var target = event.target;
+                        // 判断是不是a标签
+                        if (target.tagName.toLowerCase() === 'a') {
+                            var href = target.getAttribute('href');
+                            if (href && href == "##") {
+                                event.preventDefault();
+                                var time = target.innerText;
+                                // 去除[]
+                                time = time.replace(/\[|\]/g, '');
+                                // 找到当前iframe
+                                var frameUrl = document.querySelectorAll("iframe")[0].getAttribute("src")
+                                // 跳转当前内嵌页面视频进度
+                                dumpInnerVideo(time, frameUrl);
+                            }else if(target.innerText == '<<'){
+                                // 阻止默认跳转
+                                event.preventDefault();
+                            }else if(target.innerText == '>>'){
+                                // 阻止默认跳转
+                                event.preventDefault();
+                            }
+                        }
+                    }, true);
+                }
+            })
+
+            observer.observe(document, {childList: true, subtree: true});
+        }else if(currentPageUrl.indexOf('/supr-blog/') != -1){ 
+            // DOM 变化时的逻辑
+            function applyLogic() {
+
+                document.querySelectorAll(".theme-reco-md-content a").forEach(function (node) {
+                    if(node.innerText == ">>" || node.innerText == "<<"){
+                        node.remove();
+                    }
+                })
+
+                document.querySelectorAll(".theme-reco-md-content iframe").forEach(function (node) {
+                    const rect = node.getBoundingClientRect();
+                    // node.style.left = "900px";
+                    if(node.style.position == "fixed"){
+                    }else{
+                        node.style.position = "fixed";
+                        node.style.display = "block";
+                        node.style.top = `${rect.top + window.scrollY}px`;
+                        // 判断当前页面是blogs还是series
+                        if(document.URL.indexOf('/supr-blog/series')!= -1){
+                            node.style.left = "34.9%";
+                        }else if(document.URL.indexOf('/supr-blog/blogs')!= -1){
+                            node.style.left = "25.5%";
+                        }
+                    }
+                })
+
+            }
+
+            // 点击事件监听 
+            document.body.addEventListener('click',function(event) {
+                if(document.querySelectorAll(".theme-reco-md-content iframe").length > 0){
+                    applyLogic();
+                    var target = event.target;
+                    // 判断是不是a标签
+                    if (target.tagName.toLowerCase() === 'a') {
+                        var href = target.getAttribute('href');
+                        if (href && href == "##") {
+                            event.preventDefault();
+                            var time = target.innerText;
+                            // 去除[]
+                            time = time.replace(/\[|\]/g, '');
+                            // 找到当前iframe
+                            var frameUrl = document.querySelectorAll("iframe")[0].getAttribute("src")
+                            // 跳转当前内嵌页面视频进度
+                            dumpInnerVideo(time, frameUrl);
+                        }
+                    }
+                }
+            }, true);
         }
 
 

@@ -1,10 +1,8 @@
 # 思源笔记：视频笔记插件
 
-##### 1、下载最新Releases版本 或者 Chrome商店搜索`思源笔记：视频笔记插件`直接安装
+##### 1、Chrome商店搜索安装[思源笔记：视频笔记插件](https://chromewebstore.google.com/detail/%E6%80%9D%E6%BA%90%E7%AC%94%E8%AE%B0%EF%BC%9A%E8%A7%86%E9%A2%91%E7%AC%94%E8%AE%B0%E6%8F%92%E4%BB%B6/ggggnakoippfjjggdgadahifiankomni)
 
-##### 2、Releases版本安装模式解压安装包，进入Chrome扩展页面，加载插件文件夹并开启插件，商店安装模式可以跳过这一步
-
-##### 3、导入视频笔记模版 && 配置插件参数
+##### 2、下载最新Releases版，导入视频笔记模版 && 配置插件参数
 
 - 找到`视频笔记模版.sy.zip`​文件，导入思源
 
@@ -23,12 +21,12 @@
 
 - 点击保存配置，完成配置
 
-##### 4、演示
+##### 3、演示
 
 - [B站](https://www.bilibili.com/video/BV1rdYfeLE87/)
 - [百度网盘](https://www.bilibili.com/video/BV19QYqeBEgi)
 
-##### 5、备注
+##### 4、备注
 
 - 本插件只适用于思源web端
 - 目前支持B站、百度网盘、Youtube视频数据的同步,需要支持其他站点的可以开issue提需求，或者自行二次开发
