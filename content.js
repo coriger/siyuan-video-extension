@@ -64,15 +64,16 @@ $(function () {
                 // 判断当前节点是否是div，且具有contenteditable属性
                 var target = event.target;
 
-                // console.log("click : current node id is ",target.tagName.toLowerCase(),target.parentElement.getAttribute('data-node-id'));
-                // if(!target.parentElement.getAttribute('data-node-id')){
-                //     console.log("click : parent node id is ",target.innerText);
+                // 判断当前是否是菜单栏的文档  class必须等于b3-list-item__icon b3-tooltips b3-tooltips__n popover__block
+                // if(target.tagName.toLowerCase() == 'span' && target.classList.contains('b3-list-item__text')
+                //     && target.parentElement.getAttribute("data-node-id") != '') {
+                //     var dataId = target.parentElement.getAttribute("data-node-id");
+                //     // 拼接链接
+                //     var url = "http://127.0.0.1:6806/stage/build/desktop/?id=" + dataId;
+                //     // 浏览器重定向
+                //     window.location.href = url;
+                //     return;
                 // }
-                // 获取当前这个节点的所有html  包括它的标签属性
-                // console.log("target innerHtml : ",target.innerHTML, target.getAttribute('contenteditable'));
-
-                // 查询当前节点所有的属性以及对应的属性值
-                // console.log("node all attribute : ",target.attributes);
 
                 if (target.tagName.toLowerCase() === 'span') {
                     var href = target.getAttribute('data-href');
@@ -1047,10 +1048,21 @@ function injectBilibiliHeJiButton(ugc_season) {
  */
 function injectVideoJumpButton() {
     // 这里等待#toolbarVIP加载出来再继续执行
-    if (document.querySelector("#toolbarVIP") === null) {
+    if (document.querySelector("#toolbarVIP") === null || document.querySelector(".protyle-breadcrumb") === null) {
         setTimeout(injectVideoJumpButton, 100);
         return;
     }
+
+    // 初始化思源首页的布局
+    // initHomeLayout();
+
+    // 精简版按钮
+    const simpleDiv = document.createElement('div');
+    simpleDiv.innerHTML = `<div data-menu="true" id="extension-simple-article" class="toolbar__item ariaLabel" aria-label="精简" data-position="right">🍁</div>`;
+
+    // 精简版保存按钮
+    // const simpleSaveDiv = document.createElement('div');
+    // simpleSaveDiv.innerHTML = `<div data-menu="true" id="extension-save-simple" class="toolbar__item ariaLabel" aria-label="保存" data-position="right">🌻</div>`;
 
     // 模版插入
     const insert1Div = document.createElement('div');
@@ -1073,17 +1085,30 @@ function injectVideoJumpButton() {
     const toolbarVIP = document.getElementById('toolbarVIP');
 
     // 将新元素添加到#toolbarVIP后面
+    toolbarVIP.insertAdjacentElement('afterend', simpleDiv);
+    // simpleDiv.insertAdjacentElement('afterend', simpleSaveDiv);
     toolbarVIP.insertAdjacentElement('afterend', insert1Div);
     insert1Div.insertAdjacentElement('afterend', insert2Div);
     insert2Div.insertAdjacentElement('afterend', resetDiv);
     resetDiv.insertAdjacentElement('afterend', screen1Div);
     screen1Div.insertAdjacentElement('afterend', screen2Div);
 
+
+    var simpleBtn = document.getElementById('extension-simple-article');
+    // var simpleSaveBtn = document.getElementById('extension-save-simple');
     var insert1Btn = document.getElementById('extension-video-insert1');
     var insert2Btn = document.getElementById('extension-video-insert2');
     var resetBtn = document.getElementById('extension-video-reset');
     var screen1Btn = document.getElementById('extension-video-screen1');
     var screen2Btn = document.getElementById('extension-video-screen2');
+
+    // 精简版按钮点击事件
+    simpleBtn.addEventListener('click', function () {
+        console.log('精简版按钮被点击了！');
+        simpleArticleWindow();
+    });
+
+
 
     // 重置视频窗口监听事件
     resetBtn.addEventListener('click', function () {
@@ -1104,7 +1129,6 @@ function injectVideoJumpButton() {
             }
         });
     });
-
 
     // 默认截图监听事件
     screen1Btn.addEventListener('click', function () {
@@ -1159,6 +1183,81 @@ function injectVideoJumpButton() {
         }, 0);
     });
 }
+
+
+function initHomeLayout() {
+    document.querySelector("#toolbar").style.display = "none";
+    // 隐藏左边菜单栏 hidden visibility: hidden;
+    document.querySelector("#dockLeft").style.display = "none";
+    // 隐藏右侧导航条
+    document.querySelector("#dockRight").style.display = "none";
+    // 隐藏底部导航条
+    document.querySelector("#status").style.display = "none";
+    // 隐藏Tab栏
+    document.querySelector(".fn__flex-column.fn__flex.fn__flex-1.layout__wnd--active").querySelector("div").style.display = "none";
+    document.querySelector(".protyle-background__action").style.display = "none";
+    document.querySelector(".protyle-attr--alias").style.display = "none";
+    // 隐藏menu栏
+    document.querySelector(".protyle-breadcrumb").style.display = "none";
+
+    document.querySelector(".b3-list.fn__flex-column").style.display = "none";
+
+
+
+}
+
+function simpleArticleWindow() {
+    // 判断当前是否已经是精简模式
+    if(document.querySelector("#status").style.display == "none") {
+        // document.querySelector("#toolbar").style.display = "block";
+        document.querySelector("#dockLeft").style.display = "block";
+        document.querySelector("#dockRight").style.display = "block";
+        document.querySelector("#status").style.display = "block";
+
+        // document.querySelector(".fn__flex-column.fn__flex.fn__flex-1.layout__wnd--active").querySelector("div").style.display = "block";
+        // document.querySelector(".protyle-background__action").style.display = "block";
+        // document.querySelector(".protyle-attr--alias").style.display = "block";
+        // document.querySelector(".protyle-breadcrumb").style.display = "block";
+
+
+        // 高亮标注  找出所有span标签 data-type属性是mark的
+        document.querySelectorAll('span[data-type="mark"]').forEach(function (node) {
+            node.style.borderBottom = "2px solid currentColor";
+            // font-size: larger;
+            node.style.fontSize = "";
+        })
+
+        // .protyle-wysiwyg添加color: #1c2222;
+        document.querySelector(".protyle-wysiwyg").style.color = "";
+    }else{
+        // 隐藏顶部导航条
+        // document.querySelector("#toolbar").style.display = "none";
+        // 隐藏左边菜单栏 hidden visibility: hidden;
+        document.querySelector("#dockLeft").style.display = "none";
+        // 隐藏右侧导航条
+        document.querySelector("#dockRight").style.display = "none";
+        // 隐藏底部导航条
+        document.querySelector("#status").style.display = "none";
+        // 隐藏Tab栏
+        document.querySelector(".fn__flex-column.fn__flex.fn__flex-1.layout__wnd--active").querySelector("div").style.display = "none";
+        document.querySelector(".protyle-background__action").style.display = "none";
+        document.querySelector(".protyle-attr--alias").style.display = "none";
+        // 隐藏menu栏
+        document.querySelector(".protyle-breadcrumb").style.display = "none";
+        // 高亮标注  找出所有span标签 data-type属性是mark的
+        document.querySelectorAll('span[data-type="mark"]').forEach(function (node) {
+            // 修改节点样式  border-bottom: 8px solid currentColor;
+            node.style.borderBottom = "6px solid currentColor";
+            // font-size: larger;
+            node.style.fontSize = "larger";
+        })
+    
+        // 隐藏未标注文字
+        // .protyle-wysiwyg添加color: #1c2222;
+        document.querySelector(".protyle-wysiwyg").style.color = "#1c2222";
+    }
+
+ }
 
 
 function screenVideoTime() {

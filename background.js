@@ -407,6 +407,7 @@ chrome.webRequest.onCompleted.addListener(function (details) {
             chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
                 // 遍历tabs
                 // 发送消息到iframe中的content脚本
+                console.log("injectBilibiliHeJiButton")
                 chrome.tabs.sendMessage(tabs[0].id, {action: "injectBilibiliHeJiButton",data:json});
             });
         })
