@@ -64,17 +64,6 @@ $(function () {
                 // 判断当前节点是否是div，且具有contenteditable属性
                 var target = event.target;
 
-                // 判断当前是否是菜单栏的文档  class必须等于b3-list-item__icon b3-tooltips b3-tooltips__n popover__block
-                // if(target.tagName.toLowerCase() == 'span' && target.classList.contains('b3-list-item__text')
-                //     && target.parentElement.getAttribute("data-node-id") != '') {
-                //     var dataId = target.parentElement.getAttribute("data-node-id");
-                //     // 拼接链接
-                //     var url = "http://127.0.0.1:6806/stage/build/desktop/?id=" + dataId;
-                //     // 浏览器重定向
-                //     window.location.href = url;
-                //     return;
-                // }
-
                 if (target.tagName.toLowerCase() === 'span') {
                     var href = target.getAttribute('data-href');
                     var dataType = target.getAttribute('data-type');
@@ -1198,7 +1187,7 @@ function initHomeLayout() {
     // 隐藏Tab栏
     document.querySelector(".fn__flex-column.fn__flex.fn__flex-1.layout__wnd--active").querySelector("div").style.display = "none";
     document.querySelector(".protyle-background__action").style.display = "none";
-    document.querySelector(".protyle-attr--alias").style.display = "none";
+    // document.querySelector(".protyle-attr--alias").style.display = "none";
     // 隐藏menu栏
     document.querySelector(".protyle-breadcrumb").style.display = "none";
 
@@ -1243,7 +1232,7 @@ function simpleArticleWindow() {
         // 隐藏Tab栏
         document.querySelector(".fn__flex-column.fn__flex.fn__flex-1.layout__wnd--active").querySelector("div").style.display = "none";
         document.querySelector(".protyle-background__action").style.display = "none";
-        document.querySelector(".protyle-attr--alias").style.display = "none";
+        // document.querySelector(".protyle-attr--alias").style.display = "none";
         // 隐藏menu栏
         document.querySelector(".protyle-breadcrumb").style.display = "none";
         // 高亮标注  找出所有span标签 data-type属性是mark的

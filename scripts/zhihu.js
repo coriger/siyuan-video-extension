@@ -63,15 +63,38 @@ async function crawlQuestionAnswer(currentPageUrl) {
     // 找到script_content里initialState下的question下的answers下的656294274下的next字段
     // 把scrip_content转成json格式
     jsonData = JSON.parse(script_content);
-    var questionName = document.querySelector(".QuestionHeader-title").innerText;
+    questionName = document.querySelector(".QuestionHeader-title").innerText;
     // 问所需的字段
     feedUrl = jsonData["initialState"]["question"]["answers"][questionId]["next"];
+
+    document.querySelectorAll(".List-item").forEach(function (item, index) {
+        
+    })
+    // 遍历dataList，这里假设它是一个数组
+    if (Array.isArray(dataList)) {
+        dataList.forEach((item, index) => {
+            if (item["target_type"] == "answer") {
+                // 点赞数   作者
+                var zan = parseInt(item["target"]["voteup_count"]);
+                var author = item["target"]["author"]["name"];
+                // 内容
+                var mk = htmlToMarkdown(`${item["target"]["content"]}`);
+                answerMap.set(answerId, {
+                    "author": author,
+                    "content": mk,
+                    "zan": zan
+                });
+            }
+        });
+    }
+
+
     // 从初始URL开始递归调用
-    recursiveFetch(questionName,currentPageUrl, [feedUrl])
+    // recursiveFetch(currentPageUrl, [feedUrl])
 }
 
 
-async function recursiveFetch(questionName,questionUrl, urls, index = 0) {
+async function recursiveFetch(questionUrl, urls, index = 0) {
     if (index >= urls.length) {
         // 所有地址都已请求完毕
         return;
@@ -118,7 +141,7 @@ async function recursiveFetch(questionName,questionUrl, urls, index = 0) {
             // 创建一个json对象
             var json = {
                 "notebook": notebook,
-                "path": "/知乎/" + questionName + "[" + answerMapArray.length + "]",
+                "path": `/知乎/` + questionName + "[" + answerMapArray.length + "]",
                 "markdown": str
             }
             // 调用思源创建文档api
@@ -126,7 +149,6 @@ async function recursiveFetch(questionName,questionUrl, urls, index = 0) {
             document.getElementById("CRX-container-button").innerText = "抓取完成";
             return;
         }else{
-            // 更新进度
             document.getElementById("CRX-container-button").innerText = "调用：" + urls.length;
         }
         // 遍历data
@@ -142,11 +164,6 @@ async function recursiveFetch(questionName,questionUrl, urls, index = 0) {
                     var zan = parseInt(item["target"]["voteup_count"]);
                     if (zan > 10) {
                         console.log("zan is " + zan);
-                        // var answer = {
-                        //   "author": item["target"]["author"]["name"],
-                        //   "content": item["target"]["content"],
-                        //   "createTime": item["target"]["created_time"]
-                        // }
                         var mk = htmlToMarkdown(`${item["target"]["content"]}`);
 
                         answerMap.set(answerId, {
@@ -213,7 +230,7 @@ async function recursiveFetchTopicQuestion(topicName, urls, index = 0) {
             // 遍历questionMapArray，获取title和questionUrl
             questionMapArray.forEach(function (item, index) {
                 str += `- ${item.createTime} [${item.title}]`
-                str += `(${item.questionUrl})`
+                str += `(${item.questionUrl}) `
                 str += `\n`
             })
 
