@@ -21,10 +21,13 @@
 
 - 点击保存配置，完成初始化配置，后续插件更新无须再次配置
 
-##### 3、演示
+##### 3、支持平台
 
 - [B站](https://www.bilibili.com/video/BV1rdYfeLE87/)
 - [百度网盘](https://www.bilibili.com/video/BV19QYqeBEgi)
+- Youtube：单视频、视频列表
+- 知乎：话题精华问题、问题高赞答案
+- supr-blog
 
 ##### 4、备注
 

@@ -332,6 +332,8 @@ $(function () {
         })
 
         observer.observe(document, { childList: true, subtree: true });
+    } else if(currentPageUrl.indexOf("zhihu.com") != -1){ // 知乎话题
+        injectZhihuTopicQuestionDownButton(currentPageUrl)
     }
 
 
