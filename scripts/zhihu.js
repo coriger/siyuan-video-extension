@@ -50,6 +50,21 @@ function injectZhihuTopicQuestionDownButton(url) {
             reset();
             crawlQuestionAnswer(currentPageUrl)
         })
+    }else if(url.indexOf('zhihu.com/question') > -1 && url.indexOf('answer') > -1){  // 个人回答页  需要跳转到问题页抓取
+        // 跳转问题页面
+        const crxApp = document.createElement('div')
+        crxApp.id = 'CRX-container'
+        // 填充CRX-container的内容
+        crxApp.innerHTML = `
+        <button id="CRX-container-button" type="button" style="background-color:red" class="Button FollowButton FEfUrdfMIKpQDJDqkjte Button--primary Button--blue epMJl0lFQuYbC7jrwr_o JmYzaky7MEPMFcJDLNMG">跳转问题页</button>`
+        // 把crxApp插入到class=QuestionHeader-footer-main的div中
+        document.querySelector('.QuestionHeader-footer-main').appendChild(crxApp)
+        // 点击按钮后进行爬虫处理
+        const button = document.getElementById('CRX-container')
+        button.addEventListener('click', function() {
+            var questionId = currentPageUrl.split("/")[4];
+            window.location.href = "https://www.zhihu.com/question/" + questionId;
+        })
     }
 }
 
@@ -68,33 +83,29 @@ async function crawlQuestionAnswer(currentPageUrl) {
     feedUrl = jsonData["initialState"]["question"]["answers"][questionId]["next"];
 
     document.querySelectorAll(".List-item").forEach(function (item, index) {
-        
+        // 找到meta标签itemprop="url"的content值
+        var answerUrl = item.querySelector("meta[itemprop='url']").getAttribute("content");
+        // https://www.zhihu.com/question/1353125863/answer/36206239923
+        // 获取回答Id
+        var answerId = answerUrl.split("/")[4];
+        // 找到meta标签itemprop="name"的content值
+        var author = item.querySelector("meta[itemprop='name']").getAttribute("content");
+        var zan = parseInt(item.querySelector(".Button.VoteButton").getAttribute("aria-label").replace("赞同 ", ""));
+        var mk = htmlToMarkdown(item.querySelector(".RichText.ztext.CopyrightRichText-richText").innerHTML);
+        // console.log(mk);
+        answerMap.set(answerId, {
+                            "author": author,
+                            "content": mk,
+                            "zan": zan
+       });
     })
-    // 遍历dataList，这里假设它是一个数组
-    if (Array.isArray(dataList)) {
-        dataList.forEach((item, index) => {
-            if (item["target_type"] == "answer") {
-                // 点赞数   作者
-                var zan = parseInt(item["target"]["voteup_count"]);
-                var author = item["target"]["author"]["name"];
-                // 内容
-                var mk = htmlToMarkdown(`${item["target"]["content"]}`);
-                answerMap.set(answerId, {
-                    "author": author,
-                    "content": mk,
-                    "zan": zan
-                });
-            }
-        });
-    }
-
 
     // 从初始URL开始递归调用
-    // recursiveFetch(currentPageUrl, [feedUrl])
+    recursiveFetch(questionName,currentPageUrl, [feedUrl])
 }
 
 
-async function recursiveFetch(questionUrl, urls, index = 0) {
+async function recursiveFetch(questionName,questionUrl, urls, index = 0) {
     if (index >= urls.length) {
         // 所有地址都已请求完毕
         return;
@@ -108,7 +119,7 @@ async function recursiveFetch(questionUrl, urls, index = 0) {
         // 处理当前请求的数据
         console.log(data);
 
-        if(data["data"].length > 0){
+        if(data && data["data"].length > 0){
             // 假设data.nextUrl是下一个请求的URL
             const nextUrl = data["paging"]["next"]
             if (nextUrl) {

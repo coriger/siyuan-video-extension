@@ -228,9 +228,15 @@ async function fetchData(feedUrl) {
         if (!response.ok) {
             throw new Error('Network response was not ok');
         }
-        // 你可以继续处理响应，例如获取JSON数据
-        const data = await response.json();
-        return data;
+
+        const responseText = await response.text();
+        console.log(responseText)
+
+        // 解析响应文本为JSON
+        const jsonData = JSON.parse(responseText);
+        console.log(jsonData);
+
+        return jsonData;
     } catch (error) {
         console.error('There has been a problem with your fetch operation:', error);
     }
