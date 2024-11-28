@@ -230,11 +230,11 @@ async function fetchData(feedUrl) {
         }
 
         const responseText = await response.text();
-        console.log(responseText)
+        // console.log(responseText)
 
         // 解析响应文本为JSON
         const jsonData = JSON.parse(responseText);
-        console.log(jsonData);
+        // console.log(jsonData);
 
         return jsonData;
     } catch (error) {

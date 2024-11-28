@@ -90,7 +90,14 @@ async function crawlQuestionAnswer(currentPageUrl) {
         var answerId = answerUrl.split("/")[4];
         // 找到meta标签itemprop="name"的content值
         var author = item.querySelector("meta[itemprop='name']").getAttribute("content");
-        var zan = parseInt(item.querySelector(".Button.VoteButton").getAttribute("aria-label").replace("赞同 ", ""));
+        var zan;
+        var zanText = item.querySelector(".Button.VoteButton").getAttribute("aria-label").replace("赞同 ", "");
+        if(zanText.includes("万")){
+            zan = parseFloat(zanText.replace("万", ""))*10000;
+        }else{
+            zan = parseInt(zanText);
+        }
+        
         var mk = htmlToMarkdown(item.querySelector(".RichText.ztext.CopyrightRichText-richText").innerHTML);
         // console.log(mk);
         answerMap.set(answerId, {
@@ -156,8 +163,11 @@ async function recursiveFetch(questionName,questionUrl, urls, index = 0) {
                 "markdown": str
             }
             // 调用思源创建文档api
-            await invokeSiyuanApi("http://127.0.0.1:6806/api/filetree/createDocWithMd", json)
+            var result = await invokeSiyuanApi("http://127.0.0.1:6806/api/filetree/createDocWithMd", json)
             document.getElementById("CRX-container-button").innerText = "抓取完成";
+            const link = document.createElement('a');
+            link.href = "siyuan://blocks/" + result.data;
+            link.click();
             return;
         }else{
             document.getElementById("CRX-container-button").innerText = "调用：" + urls.length;
@@ -252,8 +262,11 @@ async function recursiveFetchTopicQuestion(topicName, urls, index = 0) {
                 "markdown": str
             }
             // 调用思源创建文档api
-            await invokeSiyuanApi("http://127.0.0.1:6806/api/filetree/createDocWithMd", json)
+            var result = await invokeSiyuanApi("http://127.0.0.1:6806/api/filetree/createDocWithMd", json)
             document.getElementById("CRX-container-button").innerText = "抓取完成";
+            const link = document.createElement('a');
+            link.href = "siyuan://blocks/" + result.data;
+            link.click();
             return;
         } else {
             // 更新进度
