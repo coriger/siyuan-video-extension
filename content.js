@@ -281,14 +281,12 @@ $(function () {
                 if (node.style.position == "fixed") {
                 } else {
                     node.style.position = "fixed";
-                    node.style.display = "block";
-                    node.style.top = `${rect.top + window.scrollY}px`;
-                    // 判断当前页面是blogs还是series
-                    if (document.URL.indexOf('/supr-blog/series') != -1) {
-                        node.style.left = "34.9%";
-                    } else if (document.URL.indexOf('/supr-blog/blogs') != -1) {
-                        node.style.left = "25.5%";
-                    }
+                    node.style.bottom = "0px";
+                    node.style.right = "0px";
+                    node.style.width = "600px";
+                    node.style.height = "400px";
+                    node.style.border = "none";
+                    node.style.zIndex = "9999";
                 }
             })
 
