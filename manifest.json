@@ -1,6 +1,6 @@
 {
   "name": "思源笔记：视频笔记插件",
-  "version": "0.2.5",
+  "version": "0.2.6",
   "manifest_version": 3,
   "description": "思源笔记：视频笔记插件，支持B站、Youtube、百度网盘做视频笔记",
   "icons": {
