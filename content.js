@@ -679,7 +679,7 @@ function injectBilibiliVideoDownButton() {
     // 判断页面类型     合集、选集、单个视频
 
     // 视频选集节点   .head-left 独有
-    var xuanji = document.querySelector(".head-left");
+    var xuanji = document.querySelector(".left");
     // 订阅合集节点  .second-line_right 独有
     var heji = document.querySelector(".subscribe-btn");
     if (xuanji) {
@@ -697,22 +697,25 @@ function injectBilibiliVideoDownButton() {
             var author = document.querySelector('meta[itemprop="author"]').getAttribute('content').trim();
             ;
             // 这里调用思源接口创建根目录
-            var json = {
-                "notebook": notebook,
-                "path": "/Video-视频库/" + title,
-                "markdown": ""
-            }
-            // 调用思源创建文档api
-            await invokeSiyuanApi("http://127.0.0.1:6806/api/filetree/createDocWithMd", json)
+            // var json = {
+            //     "notebook": notebook,
+            //     "path": "/Video-视频库/" + title,
+            //     "markdown": ""
+            // }
+            // // 调用思源创建文档api
+            // await invokeSiyuanApi("http://127.0.0.1:6806/api/filetree/createDocWithMd", json)
 
             var detailUrl = document.querySelector('meta[itemprop="url"]').getAttribute('content');
             var bvid = detailUrl.split("/")[4]
 
             // 查询页面.page-num所有节点
-            document.querySelectorAll(".page-num").forEach(async function (item, index) {
-                var page = item.innerText.replace("P", "").trim();
+            document.querySelectorAll(".title-txt").forEach(async function (item, index) {
+                // <div class="title-txt">1.东汉末年宦官当道,老郭揭秘曹操身世之谜</div> 解析出1
+                // var page = item.innerText.split(".")[0];
+                var page = index + 1;
+                // var page = item.innerText.replace("P", "").trim();
                 var duration = item.parentElement.nextElementSibling.innerText;
-                var videoTitle = item.nextElementSibling.innerText;
+                var videoTitle = item.innerText;
                 var videoUrl = `https://player.bilibili.com/player.html?bvid=${bvid}&page=${page}&high_quality=1&as_wide=1&allowfullscreen=true&autoplay=1`;
                 // 调用思源接口创建分片文件
                 var json = {

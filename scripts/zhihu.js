@@ -91,7 +91,7 @@ async function crawlQuestionAnswer(currentPageUrl) {
         // 找到meta标签itemprop="name"的content值
         var author = item.querySelector("meta[itemprop='name']").getAttribute("content");
         var zan;
-        var zanText = item.querySelector(".Button.VoteButton").getAttribute("aria-label").replace("赞同 ", "");
+        var zanText = item.querySelector(".Button.VoteButton").getAttribute("aria-label").replace("赞同 ", "").replace("已", "");
         if(zanText.includes("万")){
             zan = parseFloat(zanText.replace("万", ""))*10000;
         }else{
